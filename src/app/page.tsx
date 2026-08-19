@@ -1,14 +1,30 @@
-import { Dumbbell, Flame, Target } from "lucide-react";
+"use client";
 
+import {
+  Dumbbell,
+  Flame,
+  Target,
+} from "lucide-react";
+import { useState } from "react";
+
+import { ActiveSessionCard } from "@/components/check-in/active-session-card";
+import { CheckInDialog } from "@/components/check-in/check-in-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { useSessionStore } from "@/stores/session-store";
 
 export default function Home() {
+  const [checkInOpen, setCheckInOpen] =
+    useState(false);
+
+  const activeSession = useSessionStore(
+    (state) => state.activeSession,
+  );
+
   return (
-    <main className="min-h-screen bg-zinc-50 px-4 py-6 text-zinc-950 transition-colors dark:bg-zinc-950 dark:text-zinc-50 sm:px-6 lg:px-8">
+    <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       <div className="mx-auto max-w-6xl">
-        <header className="flex items-center justify-between">
-          
-          <div className="flex items-center gap-3">
+        <header className="flex items-center justify-between lg:justify-end">
+          <div className="flex items-center gap-3 lg:hidden">
             <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-600/20">
               <Dumbbell size={22} />
             </div>
@@ -27,21 +43,22 @@ export default function Home() {
           <ThemeToggle />
         </header>
 
-
-
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
           <div>
-            <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-              WEDNESDAY, 19 AUGUST
+            <p className="text-sm font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
+              Wednesday, 19 August
             </p>
 
             <h1 className="mt-3 max-w-xl text-4xl font-black tracking-tight sm:text-5xl">
-              Ready to show up today?
+              {activeSession
+                ? "You showed up."
+                : "Ready to show up today?"}
             </h1>
 
             <p className="mt-4 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
-              You do not need the perfect workout. Start with a small
-              commitment and protect the habit.
+              {activeSession
+                ? "Your session is active. Focus on moving and let GymFlow count the time."
+                : "You do not need the perfect workout. Start with a small commitment and protect the habit."}
             </p>
           </div>
 
@@ -67,38 +84,51 @@ export default function Home() {
             </div>
 
             <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-              One more session to achieve your weekly target.
+              One more session to achieve your weekly
+              target.
             </p>
           </div>
         </section>
 
-        <section className="mt-8 rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
-          <div className="flex max-w-xl flex-col">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-              <Flame size={23} />
+        {activeSession ? (
+          <ActiveSessionCard />
+        ) : (
+          <section className="mt-8 rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
+            <div className="flex max-w-xl flex-col">
+              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+                <Flame size={23} />
+              </div>
+
+              <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-violet-100">
+                Today&apos;s commitment
+              </p>
+
+              <h2 className="mt-2 text-3xl font-black">
+                Just begin.
+              </h2>
+
+              <p className="mt-3 text-violet-100">
+                Check in when you arrive and let the
+                session count itself.
+              </p>
+
+              <button
+                type="button"
+                onClick={() => setCheckInOpen(true)}
+                className="mt-7 rounded-2xl bg-white px-6 py-4 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98]"
+              >
+                Check In Now
+              </button>
             </div>
+          </section>
+        )}
 
-            <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-violet-100">
-              Today&apos;s commitment
-            </p>
-
-            <h2 className="mt-2 text-3xl font-black">
-              Just begin.
-            </h2>
-
-            <p className="mt-3 text-violet-100">
-              Check in when you arrive and let the session count itself.
-            </p>
-
-            <button
-              type="button"
-              className="mt-7 rounded-2xl bg-white px-6 py-4 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98]"
-            >
-              Check In Now
-            </button>
-          </div>
-        </section>
+        <CheckInDialog
+          open={checkInOpen}
+          onClose={() => setCheckInOpen(false)}
+        />
       </div>
     </main>
   );
 }
+``
