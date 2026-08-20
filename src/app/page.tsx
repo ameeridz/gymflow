@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  Dumbbell,
-  Flame,
-  Target,
-} from "lucide-react";
+import { Dumbbell, Flame, Target } from "lucide-react";
 import { useState } from "react";
 
 import { ActiveSessionCard } from "@/components/check-in/active-session-card";
@@ -131,4 +127,3 @@ export default function Home() {
     </main>
   );
 }
-``
