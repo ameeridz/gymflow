@@ -1,7 +1,13 @@
-import { AppShell } from "@/components/app-shell";
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import type {
+  Metadata,
+  Viewport,
+} from "next";
+import {
+  Geist,
+  Geist_Mono,
+} from "next/font/google";
 
+import { AppShell } from "@/components/app-shell";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import "./globals.css";
@@ -21,13 +27,54 @@ export const metadata: Metadata = {
     default: "GymFlow",
     template: "%s | GymFlow",
   },
+
   description:
-    "A lightweight gym check-in app designed to build consistency.",
+    "A lightweight gym motivation and consistency tracker.",
+
+  applicationName: "GymFlow",
+
+  manifest: "/manifest.webmanifest",
+
+  icons: {
+    icon: [
+      {
+        url: "/icon-192x192.png",
+        sizes: "192x192",
+        type: "image/png",
+      },
+      {
+        url: "/icon-512x512.png",
+        sizes: "512x512",
+        type: "image/png",
+      },
+    ],
+
+    apple: [
+      {
+        url: "/apple-touch-icon.png",
+        sizes: "180x180",
+        type: "image/png",
+      },
+    ],
+  },
+
+  appleWebApp: {
+    capable: true,
+    title: "GymFlow",
+    statusBarStyle: "black-translucent",
+  },
+
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
+  maximumScale: 1,
+  viewportFit: "cover",
+
   themeColor: [
     {
       media: "(prefers-color-scheme: light)",
