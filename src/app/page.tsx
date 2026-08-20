@@ -2,11 +2,14 @@
 
 import { Dumbbell, Flame, Target } from "lucide-react";
 import { useState } from "react";
+import { getCompletedSessionsThisWeek } from "@/lib/session-analytics";
 
 import { ActiveSessionCard } from "@/components/check-in/active-session-card";
 import { CheckInDialog } from "@/components/check-in/check-in-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSessionStore } from "@/stores/session-store";
+
+const weeklyTarget = 3;
 
 export default function Home() {
   const [checkInOpen, setCheckInOpen] =
@@ -15,6 +18,39 @@ export default function Home() {
   const activeSession = useSessionStore(
     (state) => state.activeSession,
   );
+const completedSessions = useSessionStore(
+  (state) => state.completedSessions,
+);
+
+const sessionsThisWeek =
+  getCompletedSessionsThisWeek(completedSessions);
+
+const completedThisWeek = sessionsThisWeek.length;
+
+const remainingSessions = Math.max(
+  0,
+  weeklyTarget - completedThisWeek,
+);
+
+const weeklyProgress = Math.min(
+  100,
+  (completedThisWeek / weeklyTarget) * 100,
+);
+
+const weeklyMessage =
+  completedThisWeek >= weeklyTarget
+    ? completedThisWeek === weeklyTarget
+      ? "Weekly goal achieved. Great work showing up."
+      : `Weekly goal exceeded by ${
+          completedThisWeek - weeklyTarget
+        } session${
+          completedThisWeek - weeklyTarget === 1
+            ? ""
+            : "s"
+        }.`
+    : remainingSessions === 1
+      ? "One more session to achieve your weekly target."
+      : `${remainingSessions} more sessions to achieve your weekly target.`;
 
   return (
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
@@ -66,7 +102,7 @@ export default function Home() {
                 </p>
 
                 <p className="mt-1 text-3xl font-black">
-                  2 / 3
+                  {completedThisWeek} / {weeklyTarget}
                 </p>
               </div>
 
@@ -76,12 +112,16 @@ export default function Home() {
             </div>
 
             <div className="mt-6 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-              <div className="h-full w-2/3 rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500" />
+              <div
+              className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500"
+              style={{  
+              width: `${weeklyProgress}%`,
+            }}
+          />
             </div>
 
             <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-              One more session to achieve your weekly
-              target.
+              {weeklyMessage}
             </p>
           </div>
         </section>
