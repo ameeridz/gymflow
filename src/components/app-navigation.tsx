@@ -78,12 +78,24 @@ export function DesktopSidebar() {
         </div>
 
         <div>
-          <p className="text-lg font-black tracking-tight">GymFlow</p>
+  <p className="text-lg font-black tracking-tight">
+    GymFlow
+  </p>
 
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
-            Build consistency
-          </p>
-        </div>
+  <a
+    href="https://ridzu.one"
+    target="_blank"
+    rel="noopener noreferrer"
+    aria-label="Visit Ridzjuan personal website"
+    className="group mt-0.5 inline-flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
+  >
+    <span>Build consistency with</span>
+
+    <span className="font-bold text-violet-600 underline decoration-violet-600/30 underline-offset-2 transition group-hover:decoration-violet-600 dark:text-violet-400 dark:decoration-violet-400/30 dark:group-hover:decoration-violet-400">
+      Ridzjuan
+    </span>
+  </a>
+</div>
       </div>
 
       <nav className="mt-10 space-y-2">
