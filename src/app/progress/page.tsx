@@ -18,8 +18,7 @@ import {
   getTotalDurationSeconds,
 } from "@/lib/session-analytics";
 import { useSessionStore } from "@/stores/session-store";
-
-const weeklyTarget = 3;
+import { useSettingsStore } from "@/stores/settings-store";
 
 function subscribe() {
   return () => {};
@@ -40,6 +39,10 @@ export default function ProgressPage() {
     (state) => state.completedSessions,
   );
 
+  const weeklyTarget = useSettingsStore(
+    (state) => state.weeklyTarget,
+  );
+
   const sessionsThisWeek =
     getCompletedSessionsThisWeek(completedSessions);
 
@@ -57,16 +60,32 @@ export default function ProgressPage() {
   const weeklyGoalReached =
     sessionsThisWeek.length >= weeklyTarget;
 
+  const remainingSessions = Math.max(
+    0,
+    weeklyTarget - sessionsThisWeek.length,
+  );
+
+  const goalMessage = weeklyGoalReached
+    ? sessionsThisWeek.length === weeklyTarget
+      ? "Weekly goal achieved. Keep the momentum going."
+      : `Weekly goal exceeded by ${
+          sessionsThisWeek.length - weeklyTarget
+        } session${
+          sessionsThisWeek.length - weeklyTarget === 1
+            ? ""
+            : "s"
+        }.`
+    : `${remainingSessions} more session${
+        remainingSessions === 1 ? "" : "s"
+      } to reach your goal.`;
+
   const progressItems = [
     {
       label: "Sessions this week",
       value: `${sessionsThisWeek.length} / ${weeklyTarget}`,
       description: weeklyGoalReached
         ? "Your weekly goal has been achieved."
-        : `${Math.max(
-            0,
-            weeklyTarget - sessionsThisWeek.length,
-          )} more to reach your weekly goal.`,
+        : `${remainingSessions} more to reach your weekly goal.`,
       icon: Target,
     },
     {
@@ -142,19 +161,7 @@ export default function ProgressPage() {
               </h2>
 
               <p className="mt-3 text-violet-100">
-                {weeklyGoalReached
-                  ? "Weekly goal achieved. Keep the momentum going."
-                  : `${Math.max(
-                      0,
-                      weeklyTarget -
-                        sessionsThisWeek.length,
-                    )} more session${
-                      weeklyTarget -
-                        sessionsThisWeek.length ===
-                      1
-                        ? ""
-                        : "s"
-                    } to reach your goal.`}
+                {goalMessage}
               </p>
             </div>
 
