@@ -12,10 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import {
-  useRef,
-  useState,
-} from "react";
+import { useRef, useState } from "react";
 
 import {
   parseBackupFile,
@@ -25,14 +22,7 @@ import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useToastStore } from "@/stores/toast-store";
 
-const weeklyTargetOptions = [
-  2,
-  3,
-  4,
-  5,
-  6,
-  7,
-];
+const weeklyTargetOptions = [2, 3, 4, 5, 6, 7];
 
 type ThemeOption = {
   value: "light" | "dark" | "system";
@@ -45,18 +35,9 @@ type ImportMessage = {
 } | null;
 
 const themeOptions: ThemeOption[] = [
-  {
-    value: "light",
-    label: "Light",
-  },
-  {
-    value: "dark",
-    label: "Dark",
-  },
-  {
-    value: "system",
-    label: "System",
-  },
+  { value: "light", label: "Light" },
+  { value: "dark", label: "Dark" },
+  { value: "system", label: "System" },
 ];
 
 function formatBackupDate(dateValue: string) {
@@ -73,25 +54,21 @@ export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
   const showToast = useToastStore(
-  (state) => state.showToast,
-);
+    (state) => state.showToast,
+  );
 
   const displayName = useSettingsStore(
     (state) => state.displayName,
   );
-
   const setDisplayName = useSettingsStore(
     (state) => state.setDisplayName,
   );
-
   const weeklyTarget = useSettingsStore(
     (state) => state.weeklyTarget,
   );
-
   const setWeeklyTarget = useSettingsStore(
     (state) => state.setWeeklyTarget,
   );
-
   const restoreSettings = useSettingsStore(
     (state) => state.restoreSettings,
   );
@@ -99,96 +76,62 @@ export default function SettingsPage() {
   const completedSessions = useSessionStore(
     (state) => state.completedSessions,
   );
+  const restoreCompletedSessions = useSessionStore(
+    (state) => state.restoreCompletedSessions,
+  );
 
-  const restoreCompletedSessions =
-    useSessionStore(
-      (state) =>
-        state.restoreCompletedSessions,
-    );
-
-  const [nameInput, setNameInput] =
-    useState(displayName);
-
-  const [
-    showResetConfirmation,
-    setShowResetConfirmation,
-  ] = useState(false);
-
-  const [
-    selectedBackup,
-    setSelectedBackup,
-  ] = useState<GymFlowBackup | null>(null);
-
-  const [
-    selectedFileName,
-    setSelectedFileName,
-  ] = useState("");
-
+  const [nameInput, setNameInput] = useState(displayName);
+  const [showResetConfirmation, setShowResetConfirmation] =
+    useState(false);
+  const [selectedBackup, setSelectedBackup] =
+    useState<GymFlowBackup | null>(null);
+  const [selectedFileName, setSelectedFileName] = useState("");
   const [importMessage, setImportMessage] =
     useState<ImportMessage>(null);
 
-  const fileInputRef =
-    useRef<HTMLInputElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function handleSaveName() {
-  const cleanName = nameInput
-    .trim()
-    .slice(0, 40);
+    const cleanName = nameInput.trim().slice(0, 40);
 
-  setDisplayName(cleanName);
-  setNameInput(cleanName);
+    setDisplayName(cleanName);
+    setNameInput(cleanName);
 
-  showToast({
-    type: "success",
-    title: "Name saved",
-    description: cleanName
-      ? `GymFlow will greet you as ${cleanName}.`
-      : "Your personal greeting has been removed.",
-  });
+    showToast({
+      type: "success",
+      title: "Name saved",
+      description: cleanName
+        ? `GymFlow will greet you as ${cleanName}.`
+        : "Your personal greeting has been removed.",
+    });
   }
 
   function handleExportData() {
     const backup = {
       version: 1,
       exportedAt: new Date().toISOString(),
-
       settings: {
         displayName,
         weeklyTarget,
         theme: theme ?? "system",
       },
-
       completedSessions,
     };
 
-    const fileContent = JSON.stringify(
-      backup,
-      null,
-      2,
-    );
-
+    const fileContent = JSON.stringify(backup, null, 2);
     const blob = new Blob([fileContent], {
       type: "application/json",
     });
-
-    const downloadUrl =
-      URL.createObjectURL(blob);
-
-    const link =
-      document.createElement("a");
-
-    const exportDate = new Date()
-      .toISOString()
-      .split("T")[0];
+    const downloadUrl = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    const exportDate = new Date().toISOString().split("T")[0];
 
     link.href = downloadUrl;
-    link.download =
-      `gymflow-backup-${exportDate}.json`;
+    link.download = `gymflow-backup-${exportDate}.json`;
 
     document.body.appendChild(link);
     link.click();
     link.remove();
-
     URL.revokeObjectURL(downloadUrl);
   }
 
@@ -210,104 +153,67 @@ export default function SettingsPage() {
     setSelectedBackup(null);
     setSelectedFileName("");
 
-    if (!file) {
-      return;
-    }
+    if (!file) return;
 
-    if (
-      !file.name.toLowerCase().endsWith(".json")
-    ) {
+    if (!file.name.toLowerCase().endsWith(".json")) {
       setImportMessage({
         type: "error",
-        text:
-          "Please select a GymFlow JSON backup file.",
+        text: "Please select a GymFlow JSON backup file.",
       });
-
       event.target.value = "";
       return;
     }
 
     try {
       const fileContent = await file.text();
-
-      const validationResult =
-        parseBackupFile(fileContent);
+      const validationResult = parseBackupFile(fileContent);
 
       if (!validationResult.valid) {
         setImportMessage({
           type: "error",
           text: validationResult.error,
         });
-
         event.target.value = "";
         return;
       }
 
-      setSelectedBackup(
-        validationResult.data,
-      );
-
+      setSelectedBackup(validationResult.data);
       setSelectedFileName(file.name);
     } catch {
       setImportMessage({
         type: "error",
-        text:
-          "GymFlow could not read the selected backup file.",
+        text: "GymFlow could not read the selected backup file.",
       });
-
       event.target.value = "";
     }
   }
 
   function handleConfirmImport() {
-    if (!selectedBackup) {
-      return;
-    }
+    if (!selectedBackup) return;
 
-    restoreCompletedSessions(
-      selectedBackup.completedSessions,
-    );
-
+    restoreCompletedSessions(selectedBackup.completedSessions);
     restoreSettings({
-      displayName:
-        selectedBackup.settings.displayName,
-
-      weeklyTarget:
-        selectedBackup.settings.weeklyTarget,
+      displayName: selectedBackup.settings.displayName,
+      weeklyTarget: selectedBackup.settings.weeklyTarget,
     });
-
     setTheme(selectedBackup.settings.theme);
+    setNameInput(selectedBackup.settings.displayName);
 
-    setNameInput(
-      selectedBackup.settings.displayName,
-    );
-
-    const sessionCount =
-      selectedBackup.completedSessions.length;
-
+    const sessionCount = selectedBackup.completedSessions.length;
     clearSelectedBackup();
 
-showToast({
-  type: "success",
-  title: "Backup restored",
-  description: `${sessionCount} completed ${
-    sessionCount === 1
-      ? "session"
-      : "sessions"
-  } and your preferences were restored successfully.`,
-});
-
+    showToast({
+      type: "success",
+      title: "Backup restored",
+      description: `${sessionCount} completed ${
+        sessionCount === 1 ? "session" : "sessions"
+      } and your preferences were restored successfully.`,
+    });
   }
 
   function handleResetData() {
-    localStorage.removeItem(
-      "gymflow-session-storage",
-    );
-
-    localStorage.removeItem(
-      "gymflow-settings-storage",
-    );
-
+    localStorage.removeItem("gymflow-session-storage");
+    localStorage.removeItem("gymflow-settings-storage");
     setShowResetConfirmation(false);
     window.location.reload();
   }
@@ -319,11 +225,9 @@ showToast({
           <p className="text-sm font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
             Preferences
           </p>
-
           <h1 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
             Settings
           </h1>
-
           <p className="mt-3 text-zinc-500 dark:text-zinc-400">
             Adjust GymFlow to match your routine.
           </p>
@@ -335,34 +239,22 @@ showToast({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
                 <UserRound size={21} />
               </div>
-
               <div>
-                <p className="font-bold">
-                  Personal greeting
-                </p>
-
+                <p className="font-bold">Personal greeting</p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Enter a name or nickname for your Today
-                  greeting.
+                  Enter a name or nickname for your Today greeting.
                 </p>
               </div>
             </div>
 
             <label className="mt-5 block">
-              <span className="text-sm font-bold">
-                Display name
-              </span>
-
+              <span className="text-sm font-bold">Display name</span>
               <input
                 type="text"
                 value={nameInput}
-                onChange={(event) =>
-                  setNameInput(event.target.value)
-                }
+                onChange={(event) => setNameInput(event.target.value)}
                 onKeyDown={(event) => {
-                  if (event.key === "Enter") {
-                    handleSaveName();
-                  }
+                  if (event.key === "Enter") handleSaveName();
                 }}
                 maxLength={40}
                 placeholder="What should GymFlow call you?"
@@ -371,16 +263,11 @@ showToast({
             </label>
 
             <div className="mt-3 flex items-center justify-between gap-4">
-              <p className="text-xs text-zinc-400">
-                {nameInput.length} / 40
-              </p>
-
+              <p className="text-xs text-zinc-400">{nameInput.length} / 40</p>
               <button
                 type="button"
                 onClick={handleSaveName}
-                disabled={
-                  nameInput.trim() === displayName
-                }
+                disabled={nameInput.trim() === displayName}
                 className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 Save Name
@@ -393,38 +280,29 @@ showToast({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
                 <Target size={21} />
               </div>
-
               <div>
-                <p className="font-bold">
-                  Weekly target
-                </p>
-
+                <p className="font-bold">Weekly target</p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Choose how many sessions you want to
-                  complete each week.
+                  Choose how many sessions you want to complete each week.
                 </p>
               </div>
             </div>
 
             <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {weeklyTargetOptions.map((target) => {
-                const selected =
-                  weeklyTarget === target;
+                const selected = weeklyTarget === target;
 
                 return (
                   <button
                     key={target}
                     type="button"
                     onClick={() => {
-                    setWeeklyTarget(target);
-
-                    showToast({
-                      type: "success",
-                      title: "Weekly goal updated",
-                      description: `Your new target is ${target} session${
-                        target === 1 ? "" : "s"
-                      } per week.`,
-                    });
+                      setWeeklyTarget(target);
+                      showToast({
+                        type: "success",
+                        title: "Weekly goal updated",
+                        description: `Your new target is ${target} sessions per week.`,
+                      });
                     }}
                     className={`rounded-2xl px-4 py-3 font-bold transition ${
                       selected
@@ -444,12 +322,8 @@ showToast({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
                 <Palette size={21} />
               </div>
-
               <div>
-                <p className="font-bold">
-                  Appearance
-                </p>
-
+                <p className="font-bold">Appearance</p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
                   Choose a theme or follow your device.
                 </p>
@@ -458,16 +332,13 @@ showToast({
 
             <div className="mt-5 grid grid-cols-3 gap-2">
               {themeOptions.map((option) => {
-                const selected =
-                  theme === option.value;
+                const selected = theme === option.value;
 
                 return (
                   <button
                     key={option.value}
                     type="button"
-                    onClick={() =>
-                      setTheme(option.value)
-                    }
+                    onClick={() => setTheme(option.value)}
                     className={`rounded-2xl px-3 py-3 text-sm font-bold transition ${
                       selected
                         ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"
@@ -486,15 +357,10 @@ showToast({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
                 <FileJson size={21} />
               </div>
-
               <div>
-                <p className="font-bold">
-                  Backup data
-                </p>
-
+                <p className="font-bold">Backup data</p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Export or restore your GymFlow history
-                  and preferences.
+                  Export or restore your GymFlow history and preferences.
                 </p>
               </div>
             </div>
@@ -518,9 +384,7 @@ showToast({
 
             <button
               type="button"
-              onClick={() =>
-                fileInputRef.current?.click()
-              }
+              onClick={() => fileInputRef.current?.click()}
               className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-5 py-3 font-bold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               <Upload size={18} />
@@ -536,17 +400,10 @@ showToast({
                 }`}
               >
                 {importMessage.type === "success" ? (
-                  <CheckCircle2
-                    size={19}
-                    className="mt-0.5 shrink-0"
-                  />
+                  <CheckCircle2 size={19} className="mt-0.5 shrink-0" />
                 ) : (
-                  <XCircle
-                    size={19}
-                    className="mt-0.5 shrink-0"
-                  />
+                  <XCircle size={19} className="mt-0.5 shrink-0" />
                 )}
-
                 <p>{importMessage.text}</p>
               </div>
             ) : null}
@@ -556,67 +413,43 @@ showToast({
                 <p className="font-bold text-violet-700 dark:text-violet-300">
                   Backup ready to import
                 </p>
-
                 <p className="mt-1 break-all text-xs text-violet-600/80 dark:text-violet-300/70">
                   {selectedFileName}
                 </p>
 
                 <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
                   <div>
-                    <dt className="text-zinc-500 dark:text-zinc-400">
-                      Exported
-                    </dt>
-
+                    <dt className="text-zinc-500 dark:text-zinc-400">Exported</dt>
                     <dd className="mt-1 font-bold">
-                      {formatBackupDate(
-                        selectedBackup.exportedAt,
-                      )}
+                      {formatBackupDate(selectedBackup.exportedAt)}
                     </dd>
                   </div>
-
                   <div>
                     <dt className="text-zinc-500 dark:text-zinc-400">
                       Completed sessions
                     </dt>
-
                     <dd className="mt-1 font-bold">
-                      {
-                        selectedBackup
-                          .completedSessions.length
-                      }
+                      {selectedBackup.completedSessions.length}
                     </dd>
                   </div>
-
                   <div>
                     <dt className="text-zinc-500 dark:text-zinc-400">
                       Display name
                     </dt>
-
                     <dd className="mt-1 font-bold">
-                      {selectedBackup.settings
-                        .displayName || "Not set"}
+                      {selectedBackup.settings.displayName || "Not set"}
                     </dd>
                   </div>
-
                   <div>
                     <dt className="text-zinc-500 dark:text-zinc-400">
                       Weekly target
                     </dt>
-
                     <dd className="mt-1 font-bold">
-                      {
-                        selectedBackup.settings
-                          .weeklyTarget
-                      }{" "}
-                      sessions
+                      {selectedBackup.settings.weeklyTarget} sessions
                     </dd>
                   </div>
-
                   <div>
-                    <dt className="text-zinc-500 dark:text-zinc-400">
-                      Theme
-                    </dt>
-
+                    <dt className="text-zinc-500 dark:text-zinc-400">Theme</dt>
                     <dd className="mt-1 font-bold capitalize">
                       {selectedBackup.settings.theme}
                     </dd>
@@ -624,9 +457,8 @@ showToast({
                 </dl>
 
                 <p className="mt-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                  Importing will replace your current
-                  completed sessions and preferences.
-                  Active sessions will not be restored.
+                  Importing will replace your current completed sessions and
+                  preferences. Active sessions will not be restored.
                 </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
@@ -637,7 +469,6 @@ showToast({
                   >
                     Cancel
                   </button>
-
                   <button
                     type="button"
                     onClick={handleConfirmImport}
@@ -655,15 +486,12 @@ showToast({
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-rose-100 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400">
                 <RotateCcw size={21} />
               </div>
-
               <div>
                 <p className="font-bold text-rose-700 dark:text-rose-300">
                   Reset GymFlow
                 </p>
-
                 <p className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/70">
-                  Permanently delete sessions and reset
-                  all preferences.
+                  Permanently delete sessions and reset all preferences.
                 </p>
               </div>
             </div>
@@ -671,9 +499,7 @@ showToast({
             {!showResetConfirmation ? (
               <button
                 type="button"
-                onClick={() =>
-                  setShowResetConfirmation(true)
-                }
+                onClick={() => setShowResetConfirmation(true)}
                 className="mt-5 w-full rounded-2xl bg-rose-600 px-5 py-3 font-bold text-white transition hover:bg-rose-700"
               >
                 Reset All Data
@@ -683,23 +509,18 @@ showToast({
                 <p className="text-sm font-bold text-rose-700 dark:text-rose-300">
                   Delete all GymFlow data?
                 </p>
-
                 <p className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/70">
-                  This action cannot be undone. Export a
-                  backup first if needed.
+                  This action cannot be undone. Export a backup first if needed.
                 </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
                   <button
                     type="button"
-                    onClick={() =>
-                      setShowResetConfirmation(false)
-                    }
+                    onClick={() => setShowResetConfirmation(false)}
                     className="rounded-xl border border-zinc-200 px-4 py-3 font-bold dark:border-zinc-700"
                   >
                     Cancel
                   </button>
-
                   <button
                     type="button"
                     onClick={handleResetData}
