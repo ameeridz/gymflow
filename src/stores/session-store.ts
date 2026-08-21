@@ -15,6 +15,11 @@ interface SessionUpdates {
   note: string;
 }
 
+interface PersistedSessionState {
+  activeSession: GymSession | null;
+  completedSessions: GymSession[];
+}
+
 function createSessionId() {
   if (
     typeof crypto !== "undefined" &&
@@ -31,6 +36,7 @@ function createSessionId() {
 interface SessionState {
   activeSession: GymSession | null;
   completedSessions: GymSession[];
+  lastCompletedSession: GymSession | null;
 
   startSession: (
     activityType: ActivityType,
@@ -40,6 +46,8 @@ interface SessionState {
     mood: SessionMood,
     note?: string,
   ) => void;
+
+  dismissLastCompletedSession: () => void;
 
   cancelSession: () => void;
 
@@ -63,6 +71,7 @@ export const useSessionStore =
       (set, get) => ({
         activeSession: null,
         completedSessions: [],
+        lastCompletedSession: null,
 
         startSession: (activityType) => {
           const session: GymSession = {
@@ -78,6 +87,7 @@ export const useSessionStore =
 
           set({
             activeSession: session,
+            lastCompletedSession: null,
           });
         },
 
@@ -112,7 +122,7 @@ export const useSessionStore =
             endedAt: endedAt.toISOString(),
             durationSeconds,
             mood,
-            note,
+            note: note.trim().slice(0, 280),
             status: "completed",
           };
 
@@ -123,7 +133,16 @@ export const useSessionStore =
               completedSession,
               ...state.completedSessions,
             ],
+
+            lastCompletedSession:
+              completedSession,
           }));
+        },
+
+        dismissLastCompletedSession: () => {
+          set({
+            lastCompletedSession: null,
+          });
         },
 
         cancelSession: () => {
@@ -169,6 +188,12 @@ export const useSessionStore =
                 (session) =>
                   session.id !== sessionId,
               ),
+
+            lastCompletedSession:
+              state.lastCompletedSession?.id ===
+              sessionId
+                ? null
+                : state.lastCompletedSession,
           }));
         },
 
@@ -196,12 +221,38 @@ export const useSessionStore =
           set({
             activeSession: null,
             completedSessions,
+            lastCompletedSession: null,
           });
         },
       }),
       {
         name: "gymflow-session-storage",
         version: 1,
+
+        partialize: (
+          state,
+        ): PersistedSessionState => ({
+          activeSession: state.activeSession,
+          completedSessions:
+            state.completedSessions,
+        }),
+
+        merge: (
+          persistedState,
+          currentState,
+        ) => {
+          const persisted =
+            persistedState as Partial<PersistedSessionState>;
+
+          return {
+            ...currentState,
+            activeSession:
+              persisted.activeSession ?? null,
+            completedSessions:
+              persisted.completedSessions ?? [],
+            lastCompletedSession: null,
+          };
+        },
       },
     ),
   );
