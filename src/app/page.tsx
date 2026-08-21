@@ -6,6 +6,7 @@ import { useState } from "react";
 import { ActiveSessionCard } from "@/components/check-in/active-session-card";
 import { CheckInDialog } from "@/components/check-in/check-in-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { TodayGreeting } from "@/components/today/today-greeting";
 import { getCompletedSessionsThisWeek } from "@/lib/session-analytics";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -66,25 +67,22 @@ export default function Home() {
             </div>
 
             <div>
-  <p className="text-lg font-black tracking-tight">
-    GymFlow
-  </p>
+              <p className="text-lg font-black tracking-tight">
+                GymFlow
+              </p>
 
-  <a
-    href="https://ridzu.one"
-    target="_blank"
-    rel="noopener noreferrer"
-    aria-label="Visit Ridzjuan personal website"
-    className="group mt-0.5 inline-flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
-  >
-    <span>Build consistency with</span>
-
-    <span className="font-bold text-violet-600 underline decoration-violet-600/30 underline-offset-2 dark:text-violet-400 dark:decoration-violet-400/30">
-      Ridzjuan
-    </span>
-  </a>
-</div>
-
+              <a
+                href="https://ridzu.one"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
+              >
+                Build consistency with{" "}
+                <span className="font-bold text-violet-600 dark:text-violet-400">
+                  Ridzjuan
+                </span>
+              </a>
+            </div>
           </div>
 
           <ThemeToggle />
@@ -92,11 +90,9 @@ export default function Home() {
 
         <section className="mt-10 grid gap-6 lg:grid-cols-2">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400">
-              Wednesday, 19 August
-            </p>
+            <TodayGreeting />
 
-            <h1 className="mt-3 max-w-xl text-4xl font-black tracking-tight sm:text-5xl">
+            <h1 className="mt-4 max-w-xl text-4xl font-black tracking-tight sm:text-5xl">
               {activeSession
                 ? "You showed up."
                 : "Ready to show up today?"}
