@@ -6,9 +6,10 @@ import {
   RotateCcw,
   Target,
   Upload,
+  UserRound,
 } from "lucide-react";
-import { useState } from "react";
 import { useTheme } from "next-themes";
+import { useState } from "react";
 
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -38,6 +39,14 @@ const themeOptions: ThemeOption[] = [
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
 
+  const displayName = useSettingsStore(
+    (state) => state.displayName,
+  );
+
+  const setDisplayName = useSettingsStore(
+    (state) => state.setDisplayName,
+  );
+
   const weeklyTarget = useSettingsStore(
     (state) => state.weeklyTarget,
   );
@@ -50,14 +59,24 @@ export default function SettingsPage() {
     (state) => state.completedSessions,
   );
 
-  const [showResetConfirmation, setShowResetConfirmation] =
-    useState(false);
+  const [nameInput, setNameInput] =
+    useState(displayName);
+
+  const [
+    showResetConfirmation,
+    setShowResetConfirmation,
+  ] = useState(false);
+
+  function handleSaveName() {
+    setDisplayName(nameInput);
+  }
 
   function handleExportData() {
     const backup = {
       version: 1,
       exportedAt: new Date().toISOString(),
       settings: {
+        displayName,
         weeklyTarget,
         theme: theme ?? "system",
       },
@@ -122,6 +141,64 @@ export default function SettingsPage() {
         </header>
 
         <section className="mt-10 space-y-5">
+          <article className="rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
+            <div className="flex items-start gap-4">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                <UserRound size={21} />
+              </div>
+
+              <div>
+                <p className="font-bold">
+                  Personal greeting
+                </p>
+
+                <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
+                  Enter a name or nickname for your Today
+                  greeting.
+                </p>
+              </div>
+            </div>
+
+            <label className="mt-5 block">
+              <span className="text-sm font-bold">
+                Display name
+              </span>
+
+              <input
+                type="text"
+                value={nameInput}
+                onChange={(event) =>
+                  setNameInput(event.target.value)
+                }
+                onKeyDown={(event) => {
+                  if (event.key === "Enter") {
+                    handleSaveName();
+                  }
+                }}
+                maxLength={40}
+                placeholder="What should GymFlow call you?"
+                className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition placeholder:text-zinc-400 focus:border-violet-600 focus:ring-2 focus:ring-violet-600/15 dark:border-zinc-800 dark:bg-zinc-950"
+              />
+            </label>
+
+            <div className="mt-3 flex items-center justify-between gap-4">
+              <p className="text-xs text-zinc-400">
+                {nameInput.length} / 40
+              </p>
+
+              <button
+                type="button"
+                onClick={handleSaveName}
+                disabled={
+                  nameInput.trim() === displayName
+                }
+                className="rounded-xl bg-violet-600 px-5 py-2.5 text-sm font-bold text-white transition hover:bg-violet-700 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Save Name
+              </button>
+            </div>
+          </article>
+
           <article className="rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
             <div className="flex items-start gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
