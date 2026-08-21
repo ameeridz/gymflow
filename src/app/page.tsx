@@ -61,12 +61,12 @@ export default function Home() {
     <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       <div className="mx-auto max-w-6xl">
         <header className="flex items-center justify-between lg:justify-end">
-          <div className="flex items-center gap-3 lg:hidden">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-600/20">
+          <div className="flex min-w-0 items-center gap-3 lg:hidden">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-600/20">
               <Dumbbell size={22} />
             </div>
 
-            <div>
+            <div className="min-w-0">
               <p className="text-lg font-black tracking-tight">
                 GymFlow
               </p>
@@ -75,7 +75,8 @@ export default function Home() {
                 href="https://ridzu.one"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
+                aria-label="Visit Ridzjuan personal website"
+                className="block truncate text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
               >
                 Build consistency with{" "}
                 <span className="font-bold text-violet-600 dark:text-violet-400">
@@ -92,13 +93,13 @@ export default function Home() {
           <div>
             <TodayGreeting />
 
-            <h1 className="mt-4 max-w-xl text-4xl font-black tracking-tight sm:text-5xl">
+            <h1 className="mt-5 max-w-xl text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">
               {activeSession
                 ? "You showed up."
                 : "Ready to show up today?"}
             </h1>
 
-            <p className="mt-4 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
+            <p className="mt-3 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
               {activeSession
                 ? "Your session is active. Focus on moving and let GymFlow count the time."
                 : "You do not need the perfect workout. Start with a small commitment and protect the habit."}
