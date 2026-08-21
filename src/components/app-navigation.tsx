@@ -77,7 +77,7 @@ export function DesktopSidebar() {
           <Dumbbell size={22} />
         </div>
 
-        <div>
+        <div className="min-w-0">
   <p className="text-lg font-black tracking-tight">
     GymFlow
   </p>
@@ -87,11 +87,13 @@ export function DesktopSidebar() {
     target="_blank"
     rel="noopener noreferrer"
     aria-label="Visit Ridzjuan personal website"
-    className="group mt-0.5 inline-flex items-center gap-1 text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
+    className="mt-0.5 block text-xs leading-5 text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
   >
-    <span>Build consistency with</span>
+    <span className="block">
+      Build consistency with
+    </span>
 
-    <span className="font-bold text-violet-600 underline decoration-violet-600/30 underline-offset-2 transition group-hover:decoration-violet-600 dark:text-violet-400 dark:decoration-violet-400/30 dark:group-hover:decoration-violet-400">
+    <span className="font-bold text-violet-600 underline decoration-violet-600/30 underline-offset-2 dark:text-violet-400 dark:decoration-violet-400/30">
       Ridzjuan
     </span>
   </a>
