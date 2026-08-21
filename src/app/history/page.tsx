@@ -2,7 +2,6 @@
 
 import {
   CalendarDays,
-  CheckCircle2,
   Clock3,
   Dumbbell,
   Frown,
@@ -33,6 +32,7 @@ import {
 } from "@/components/history/history-search-sort";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSessionStore } from "@/stores/session-store";
+import { useToastStore } from "@/stores/toast-store";
 import type {
   ActivityType,
   GymSession,
@@ -333,6 +333,10 @@ function DeleteSessionDialog({
 
 export default function HistoryPage() {
   const mounted = useMounted();
+  
+  const showToast = useToastStore(
+  (state) => state.showToast,
+  );
 
   const [activityFilter, setActivityFilter] =
     useState<HistoryActivityFilterValue>("all");
@@ -369,8 +373,7 @@ export default function HistoryPage() {
     setSessionPendingDelete,
   ] = useState<GymSession | null>(null);
 
-  const [feedback, setFeedback] =
-    useState<string | null>(null);
+  
 
   const sessions = [...completedSessions].sort(
     (firstSession, secondSession) =>
@@ -484,11 +487,10 @@ export default function HistoryPage() {
     normalizedSearchQuery.length > 0;
 
   function handleEditRequest(
-    session: GymSession,
-  ) {
-    setFeedback(null);
-    setSessionPendingEdit(session);
-  }
+  session: GymSession,
+) {
+  setSessionPendingEdit(session);
+}
 
   function handleCloseEdit() {
     setSessionPendingEdit(null);
@@ -509,17 +511,19 @@ export default function HistoryPage() {
 
     setSessionPendingEdit(null);
 
-    setFeedback(
-      "Session updated successfully. Your History now reflects the latest changes.",
-    );
+    showToast({
+  type: "success",
+  title: "Session updated",
+  description:
+    "Your activity, mood and note changes have been saved.",
+});
   }
 
   function handleDeleteRequest(
-    session: GymSession,
-  ) {
-    setFeedback(null);
-    setSessionPendingDelete(session);
-  }
+  session: GymSession,
+) {
+  setSessionPendingDelete(session);
+}
 
   function handleCancelDelete() {
     setSessionPendingDelete(null);
@@ -541,9 +545,12 @@ export default function HistoryPage() {
 
     setSessionPendingDelete(null);
 
-    setFeedback(
-      `${sessionLabel} session deleted successfully. Your progress has been updated.`,
-    );
+    showToast({
+  type: "success",
+  title: "Session deleted",
+  description: `${sessionLabel} was removed and your progress has been updated.`,
+});
+
   }
 
   function handleClearResults() {
@@ -591,16 +598,7 @@ export default function HistoryPage() {
             </div>
           ) : null}
 
-          {feedback ? (
-            <div className="mt-6 flex items-start gap-3 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
-              <CheckCircle2
-                size={19}
-                className="mt-0.5 shrink-0"
-              />
-
-              <p>{feedback}</p>
-            </div>
-          ) : null}
+          
 
           {!mounted ? (
             <section className="mt-10 min-h-72 animate-pulse rounded-3xl bg-zinc-200 dark:bg-zinc-900" />
