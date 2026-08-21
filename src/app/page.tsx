@@ -18,15 +18,22 @@ import {
 import { ActiveSessionCard } from "@/components/check-in/active-session-card";
 import { CheckInDialog } from "@/components/check-in/check-in-dialog";
 import { SessionCompletionSummary } from "@/components/check-in/session-completion-summary";
+import { InstallGymFlowBanner } from "@/components/pwa/install-gymflow-banner";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TodayGreeting } from "@/components/today/today-greeting";
+import { WeeklyTargetDialog } from "@/components/today/weekly-target-dialog";
 import { getCompletedSessionsThisWeek } from "@/lib/session-analytics";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useToastStore } from "@/stores/toast-store";
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+
+  const showToast = useToastStore(
+    (state) => state.showToast,
+  );
 
   const activeSession = useSessionStore(
     (state) => state.activeSession,
@@ -36,34 +43,31 @@ function HomeContent() {
     (state) => state.completedSessions,
   );
 
-  const lastCompletedSession =
-    useSessionStore(
-      (state) =>
-        state.lastCompletedSession,
-    );
+  const lastCompletedSession = useSessionStore(
+    (state) => state.lastCompletedSession,
+  );
 
-  const dismissLastCompletedSession =
-    useSessionStore(
-      (state) =>
-        state.dismissLastCompletedSession,
-    );
+  const dismissLastCompletedSession = useSessionStore(
+    (state) => state.dismissLastCompletedSession,
+  );
 
   const weeklyTarget = useSettingsStore(
     (state) => state.weeklyTarget,
   );
 
-  const [
-    checkInOpen,
-    setCheckInOpen,
-  ] = useState(() => {
+  const setWeeklyTarget = useSettingsStore(
+    (state) => state.setWeeklyTarget,
+  );
+
+  const [checkInOpen, setCheckInOpen] = useState(() => {
     const requestedCheckIn =
       searchParams.get("checkin") === "true";
 
-    return (
-      requestedCheckIn &&
-      activeSession === null
-    );
+    return requestedCheckIn && activeSession === null;
   });
+
+  const [weeklyTargetOpen, setWeeklyTargetOpen] =
+    useState(false);
 
   useEffect(() => {
     const requestedCheckIn =
@@ -79,12 +83,9 @@ function HomeContent() {
   }, [router, searchParams]);
 
   const sessionsThisWeek =
-    getCompletedSessionsThisWeek(
-      completedSessions,
-    );
+    getCompletedSessionsThisWeek(completedSessions);
 
-  const completedThisWeek =
-    sessionsThisWeek.length;
+  const completedThisWeek = sessionsThisWeek.length;
 
   const remainingSessions = Math.max(
     0,
@@ -93,8 +94,7 @@ function HomeContent() {
 
   const weeklyProgress = Math.min(
     100,
-    (completedThisWeek / weeklyTarget) *
-      100,
+    (completedThisWeek / weeklyTarget) * 100,
   );
 
   const weeklyMessage =
@@ -104,9 +104,7 @@ function HomeContent() {
         : `Weekly goal exceeded by ${
             completedThisWeek - weeklyTarget
           } session${
-            completedThisWeek -
-              weeklyTarget ===
-            1
+            completedThisWeek - weeklyTarget === 1
               ? ""
               : "s"
           }.`
@@ -119,8 +117,15 @@ function HomeContent() {
     router.push("/history");
   }
 
-  function handleCloseCheckIn() {
-    setCheckInOpen(false);
+  function handleSaveWeeklyTarget(target: number) {
+    setWeeklyTarget(target);
+    setWeeklyTargetOpen(false);
+
+    showToast({
+      type: "success",
+      title: "Weekly goal updated",
+      description: `Your new target is ${target} sessions per week.`,
+    });
   }
 
   return (
@@ -181,14 +186,19 @@ function HomeContent() {
                   </p>
 
                   <p className="mt-1 text-3xl font-black">
-                    {completedThisWeek} /{" "}
-                    {weeklyTarget}
+                    {completedThisWeek} / {weeklyTarget}
                   </p>
                 </div>
 
-                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                <button
+                  type="button"
+                  onClick={() => setWeeklyTargetOpen(true)}
+                  aria-label="Configure weekly goal"
+                  title="Edit weekly goal"
+                  className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 transition hover:bg-violet-200 active:scale-95 dark:bg-violet-500/15 dark:text-violet-400 dark:hover:bg-violet-500/25"
+                >
                   <Target size={23} />
-                </div>
+                </button>
               </div>
 
               <div className="mt-6 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
@@ -200,11 +210,25 @@ function HomeContent() {
                 />
               </div>
 
-              <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-                {weeklyMessage}
-              </p>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+    {weeklyMessage}
+  </p>
+
+  <button
+    type="button"
+    onClick={() => setWeeklyTargetOpen(true)}
+    className="w-fit text-sm font-bold text-violet-600 transition hover:text-violet-700 hover:underline hover:underline-offset-4 active:scale-[0.98] dark:text-violet-400 dark:hover:text-violet-300"
+  >
+    Configure weekly target →
+  </button>
+</div>
             </div>
           </section>
+
+          {!activeSession && !lastCompletedSession ? (
+            <InstallGymFlowBanner />
+          ) : null}
 
           {activeSession ? (
             <ActiveSessionCard />
@@ -230,9 +254,7 @@ function HomeContent() {
 
                 <button
                   type="button"
-                  onClick={() =>
-                    setCheckInOpen(true)
-                  }
+                  onClick={() => setCheckInOpen(true)}
                   className="mt-7 rounded-2xl bg-white px-6 py-4 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98]"
                 >
                   Check In Now
@@ -242,28 +264,27 @@ function HomeContent() {
           )}
 
           <CheckInDialog
-            open={
-              checkInOpen &&
-              activeSession === null
-            }
-            onClose={handleCloseCheckIn}
+            open={checkInOpen && activeSession === null}
+            onClose={() => setCheckInOpen(false)}
           />
         </div>
       </main>
 
+      <WeeklyTargetDialog
+        key={`${weeklyTarget}-${weeklyTargetOpen}`}
+        open={weeklyTargetOpen}
+        currentTarget={weeklyTarget}
+        onClose={() => setWeeklyTargetOpen(false)}
+        onSave={handleSaveWeeklyTarget}
+      />
+
       {lastCompletedSession ? (
         <SessionCompletionSummary
           session={lastCompletedSession}
-          completedThisWeek={
-            completedThisWeek
-          }
+          completedThisWeek={completedThisWeek}
           weeklyTarget={weeklyTarget}
-          onDone={
-            dismissLastCompletedSession
-          }
-          onViewHistory={
-            handleViewHistory
-          }
+          onDone={dismissLastCompletedSession}
+          onViewHistory={handleViewHistory}
         />
       ) : null}
     </>
