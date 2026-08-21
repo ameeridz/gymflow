@@ -1,8 +1,19 @@
 "use client";
 
-import { Dumbbell, Flame, Target } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import {
+  Dumbbell,
+  Flame,
+  Target,
+} from "lucide-react";
+import {
+  useRouter,
+  useSearchParams,
+} from "next/navigation";
+import {
+  Suspense,
+  useEffect,
+  useState,
+} from "react";
 
 import { ActiveSessionCard } from "@/components/check-in/active-session-card";
 import { CheckInDialog } from "@/components/check-in/check-in-dialog";
@@ -13,11 +24,9 @@ import { getCompletedSessionsThisWeek } from "@/lib/session-analytics";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
-export default function Home() {
+function HomeContent() {
   const router = useRouter();
-
-  const [checkInOpen, setCheckInOpen] =
-    useState(false);
+  const searchParams = useSearchParams();
 
   const activeSession = useSessionStore(
     (state) => state.activeSession,
@@ -42,6 +51,32 @@ export default function Home() {
   const weeklyTarget = useSettingsStore(
     (state) => state.weeklyTarget,
   );
+
+  const [
+    checkInOpen,
+    setCheckInOpen,
+  ] = useState(() => {
+    const requestedCheckIn =
+      searchParams.get("checkin") === "true";
+
+    return (
+      requestedCheckIn &&
+      activeSession === null
+    );
+  });
+
+  useEffect(() => {
+    const requestedCheckIn =
+      searchParams.get("checkin") === "true";
+
+    if (!requestedCheckIn) {
+      return;
+    }
+
+    router.replace("/", {
+      scroll: false,
+    });
+  }, [router, searchParams]);
 
   const sessionsThisWeek =
     getCompletedSessionsThisWeek(
@@ -82,6 +117,10 @@ export default function Home() {
   function handleViewHistory() {
     dismissLastCompletedSession();
     router.push("/history");
+  }
+
+  function handleCloseCheckIn() {
+    setCheckInOpen(false);
   }
 
   return (
@@ -203,10 +242,11 @@ export default function Home() {
           )}
 
           <CheckInDialog
-            open={checkInOpen}
-            onClose={() =>
-              setCheckInOpen(false)
+            open={
+              checkInOpen &&
+              activeSession === null
             }
+            onClose={handleCloseCheckIn}
           />
         </div>
       </main>
@@ -227,5 +267,21 @@ export default function Home() {
         />
       ) : null}
     </>
+  );
+}
+
+function HomeLoading() {
+  return (
+    <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+      <div className="mx-auto min-h-96 max-w-6xl animate-pulse rounded-3xl bg-zinc-200 dark:bg-zinc-900" />
+    </main>
+  );
+}
+
+export default function Home() {
+  return (
+    <Suspense fallback={<HomeLoading />}>
+      <HomeContent />
+    </Suspense>
   );
 }
