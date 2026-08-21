@@ -23,6 +23,10 @@ import {
 } from "react";
 
 import { EditSessionDialog } from "@/components/history/edit-session-dialog";
+import {
+  HistoryActivityFilter,
+  type HistoryActivityFilter as HistoryActivityFilterValue,
+} from "@/components/history/history-activity-filter";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSessionStore } from "@/stores/session-store";
 import type {
@@ -31,7 +35,10 @@ import type {
   SessionMood,
 } from "@/types/session";
 
-const activityLabels: Record<ActivityType, string> = {
+const activityLabels: Record<
+  ActivityType,
+  string
+> = {
   strength: "Strength",
   cardio: "Cardio",
   mixed: "Mixed",
@@ -47,7 +54,10 @@ const activityIcons = {
   quick: Timer,
 };
 
-const moodLabels: Record<SessionMood, string> = {
+const moodLabels: Record<
+  SessionMood,
+  string
+> = {
   tough: "Tough",
   okay: "Okay",
   great: "Great",
@@ -58,11 +68,6 @@ const moodIcons = {
   okay: Meh,
   great: Smile,
 };
-
-type FeedbackMessage = {
-  type: "updated" | "deleted";
-  text: string;
-} | null;
 
 function subscribe() {
   return () => {};
@@ -325,6 +330,9 @@ function DeleteSessionDialog({
 export default function HistoryPage() {
   const mounted = useMounted();
 
+  const [activityFilter, setActivityFilter] =
+    useState<HistoryActivityFilterValue>("all");
+
   const completedSessions = useSessionStore(
     (state) => state.completedSessions,
   );
@@ -352,7 +360,7 @@ export default function HistoryPage() {
   ] = useState<GymSession | null>(null);
 
   const [feedback, setFeedback] =
-    useState<FeedbackMessage>(null);
+    useState<string | null>(null);
 
   const sessions = [...completedSessions].sort(
     (firstSession, secondSession) =>
@@ -363,6 +371,52 @@ export default function HistoryPage() {
         firstSession.startedAt,
       ).getTime(),
   );
+
+  const sessionCounts: Record<
+    HistoryActivityFilterValue,
+    number
+  > = {
+    all: sessions.length,
+
+    strength: sessions.filter(
+      (session) =>
+        session.activityType === "strength",
+    ).length,
+
+    cardio: sessions.filter(
+      (session) =>
+        session.activityType === "cardio",
+    ).length,
+
+    mixed: sessions.filter(
+      (session) =>
+        session.activityType === "mixed",
+    ).length,
+
+    mobility: sessions.filter(
+      (session) =>
+        session.activityType === "mobility",
+    ).length,
+
+    quick: sessions.filter(
+      (session) =>
+        session.activityType === "quick",
+    ).length,
+  };
+
+  const filteredSessions =
+    activityFilter === "all"
+      ? sessions
+      : sessions.filter(
+          (session) =>
+            session.activityType ===
+            activityFilter,
+        );
+
+  const activeFilterLabel =
+    activityFilter === "all"
+      ? "All"
+      : activityLabels[activityFilter];
 
   function handleEditRequest(
     session: GymSession,
@@ -390,11 +444,9 @@ export default function HistoryPage() {
 
     setSessionPendingEdit(null);
 
-    setFeedback({
-      type: "updated",
-      text:
-        "Session updated successfully. Your History now reflects the latest changes.",
-    });
+    setFeedback(
+      "Session updated successfully. Your History now reflects the latest changes.",
+    );
   }
 
   function handleDeleteRequest(
@@ -418,20 +470,19 @@ export default function HistoryPage() {
         sessionPendingDelete.activityType
       ];
 
-    deleteCompletedSession(
+        deleteCompletedSession(
       sessionPendingDelete.id,
     );
 
     setSessionPendingDelete(null);
 
-    setFeedback({
-      type: "deleted",
-      text: `${sessionLabel} session deleted successfully. Your progress has been updated.`,
-    });
+    setFeedback(
+      `${sessionLabel} session deleted successfully. Your progress has been updated.`,
+    );
   }
 
   return (
-    <>
+    <div className="contents">
       <main className="px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
         <div className="mx-auto max-w-6xl">
           <header className="flex items-start justify-between gap-4">
@@ -453,6 +504,16 @@ export default function HistoryPage() {
             <ThemeToggle />
           </header>
 
+          {mounted && sessions.length > 0 ? (
+            <div className="mt-8">
+              <HistoryActivityFilter
+                value={activityFilter}
+                onChange={setActivityFilter}
+                sessionCounts={sessionCounts}
+              />
+            </div>
+          ) : null}
+
           {feedback ? (
             <div className="mt-6 flex items-start gap-3 rounded-2xl bg-emerald-50 p-4 text-sm text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300">
               <CheckCircle2
@@ -460,7 +521,7 @@ export default function HistoryPage() {
                 className="mt-0.5 shrink-0"
               />
 
-              <p>{feedback.text}</p>
+              <p>{feedback}</p>
             </div>
           ) : null}
 
@@ -486,18 +547,48 @@ export default function HistoryPage() {
                 Start by checking in from the Today page.
               </div>
             </section>
+          ) : filteredSessions.length === 0 ? (
+            <section className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900">
+              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                <History size={25} />
+              </div>
+
+              <h2 className="mt-5 text-xl font-black">
+                No{" "}
+                {activeFilterLabel.toLowerCase()}{" "}
+                sessions
+              </h2>
+
+              <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                There are no completed sessions matching
+                this activity filter yet.
+              </p>
+
+              <button
+                type="button"
+                onClick={() =>
+                  setActivityFilter("all")
+                }
+                className="mt-6 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-700"
+              >
+                Show All Sessions
+              </button>
+            </section>
           ) : (
-            <section className="mt-10 space-y-4">
+            <section className="mt-8 space-y-4">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">
-                  {sessions.length} completed{" "}
-                  {sessions.length === 1
+                  {filteredSessions.length}{" "}
+                  {activityFilter === "all"
+                    ? "completed"
+                    : activeFilterLabel.toLowerCase()}{" "}
+                  {filteredSessions.length === 1
                     ? "session"
                     : "sessions"}
                 </p>
               </div>
 
-              {sessions.map((session) => (
+              {filteredSessions.map((session) => (
                 <SessionCard
                   key={session.id}
                   session={session}
@@ -526,6 +617,6 @@ export default function HistoryPage() {
           onConfirm={handleConfirmDelete}
         />
       ) : null}
-    </>
+    </div>
   );
 }
