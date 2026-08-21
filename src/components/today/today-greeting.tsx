@@ -65,12 +65,12 @@ export function TodayGreeting() {
 
   return (
     <div>
-      <p className="text-sm font-semibold text-violet-600 dark:text-violet-400">
-        {greetingText}
+      <p className="text-xl font-black tracking-tight text-violet-600 dark:text-violet-400 sm:text-2xl">
+      {greetingText}
       </p>
 
-      <p className="mt-2 text-sm font-medium uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
-        {formattedDate}
+      <p className="mt-2 text-xs font-semibold uppercase tracking-[0.16em] text-zinc-500 dark:text-zinc-400 sm:text-sm">
+      {formattedDate}
       </p>
     </div>
   );
