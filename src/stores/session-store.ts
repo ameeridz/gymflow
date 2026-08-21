@@ -9,6 +9,12 @@ import type {
   SessionMood,
 } from "@/types/session";
 
+interface SessionUpdates {
+  activityType: ActivityType;
+  mood: SessionMood;
+  note: string;
+}
+
 function createSessionId() {
   if (
     typeof crypto !== "undefined" &&
@@ -36,6 +42,15 @@ interface SessionState {
   ) => void;
 
   cancelSession: () => void;
+
+  updateCompletedSession: (
+    sessionId: string,
+    updates: SessionUpdates,
+  ) => void;
+
+  deleteCompletedSession: (
+    sessionId: string,
+  ) => void;
 
   restoreCompletedSessions: (
     sessions: GymSession[],
@@ -117,7 +132,49 @@ export const useSessionStore =
           });
         },
 
-        restoreCompletedSessions: (sessions) => {
+        updateCompletedSession: (
+          sessionId,
+          updates,
+        ) => {
+          const cleanNote = updates.note
+            .trim()
+            .slice(0, 280);
+
+          set((state) => ({
+            completedSessions:
+              state.completedSessions.map(
+                (session) => {
+                  if (session.id !== sessionId) {
+                    return session;
+                  }
+
+                  return {
+                    ...session,
+                    activityType:
+                      updates.activityType,
+                    mood: updates.mood,
+                    note: cleanNote,
+                  };
+                },
+              ),
+          }));
+        },
+
+        deleteCompletedSession: (
+          sessionId,
+        ) => {
+          set((state) => ({
+            completedSessions:
+              state.completedSessions.filter(
+                (session) =>
+                  session.id !== sessionId,
+              ),
+          }));
+        },
+
+        restoreCompletedSessions: (
+          sessions,
+        ) => {
           const completedSessions = sessions
             .filter(
               (session) =>
