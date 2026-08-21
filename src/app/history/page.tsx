@@ -16,6 +16,7 @@ import {
   X,
   Zap,
 } from "lucide-react";
+import { useRouter } from "next/navigation";
 import {
   useState,
   useSyncExternalStore,
@@ -113,7 +114,9 @@ function formatDuration(
   return `${seconds} sec`;
 }
 
-function formatSessionDate(dateValue: string) {
+function formatSessionDate(
+  dateValue: string,
+) {
   return new Intl.DateTimeFormat("en-MY", {
     weekday: "short",
     day: "numeric",
@@ -180,17 +183,19 @@ function SessionCard({
                 onClick={() => onEdit(session)}
                 aria-label={`Edit ${activityLabel} session`}
                 title="Edit session"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-violet-200 text-violet-600 transition hover:bg-violet-50 active:scale-95 dark:border-violet-500/20 dark:text-violet-400 dark:hover:bg-violet-500/10"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-violet-200 text-violet-600 transition hover:bg-violet-50 active:scale-95 dark:border-violet-500/20 dark:text-violet-400 dark:hover:bg-violet-500/10"
               >
                 <Pencil size={16} />
               </button>
 
               <button
                 type="button"
-                onClick={() => onDelete(session)}
+                onClick={() =>
+                  onDelete(session)
+                }
                 aria-label={`Delete ${activityLabel} session`}
                 title="Delete session"
-                className="flex h-9 w-9 items-center justify-center rounded-xl border border-rose-200 text-rose-600 transition hover:bg-rose-50 active:scale-95 dark:border-rose-500/20 dark:text-rose-400 dark:hover:bg-rose-500/10"
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-rose-200 text-rose-600 transition hover:bg-rose-50 active:scale-95 dark:border-rose-500/20 dark:text-rose-400 dark:hover:bg-rose-500/10"
               >
                 <Trash2 size={16} />
               </button>
@@ -208,7 +213,6 @@ function SessionCard({
 
             <div className="flex items-center gap-2 rounded-xl bg-zinc-100 px-3 py-2 text-sm dark:bg-zinc-800">
               <MoodIcon size={16} />
-
               {moodLabel}
             </div>
           </div>
@@ -333,13 +337,16 @@ function DeleteSessionDialog({
 
 export default function HistoryPage() {
   const mounted = useMounted();
-  
+  const router = useRouter();
+
   const showToast = useToastStore(
-  (state) => state.showToast,
+    (state) => state.showToast,
   );
 
   const [activityFilter, setActivityFilter] =
-    useState<HistoryActivityFilterValue>("all");
+    useState<HistoryActivityFilterValue>(
+      "all",
+    );
 
   const [searchQuery, setSearchQuery] =
     useState("");
@@ -372,8 +379,6 @@ export default function HistoryPage() {
     sessionPendingDelete,
     setSessionPendingDelete,
   ] = useState<GymSession | null>(null);
-
-  
 
   const sessions = [...completedSessions].sort(
     (firstSession, secondSession) =>
@@ -486,11 +491,15 @@ export default function HistoryPage() {
   const hasActiveSearch =
     normalizedSearchQuery.length > 0;
 
+  function handleStartFirstSession() {
+    router.push("/?checkin=true");
+  }
+
   function handleEditRequest(
-  session: GymSession,
-) {
-  setSessionPendingEdit(session);
-}
+    session: GymSession,
+  ) {
+    setSessionPendingEdit(session);
+  }
 
   function handleCloseEdit() {
     setSessionPendingEdit(null);
@@ -512,18 +521,18 @@ export default function HistoryPage() {
     setSessionPendingEdit(null);
 
     showToast({
-  type: "success",
-  title: "Session updated",
-  description:
-    "Your activity, mood and note changes have been saved.",
-});
+      type: "success",
+      title: "Session updated",
+      description:
+        "Your activity, mood and note changes have been saved.",
+    });
   }
 
   function handleDeleteRequest(
-  session: GymSession,
-) {
-  setSessionPendingDelete(session);
-}
+    session: GymSession,
+  ) {
+    setSessionPendingDelete(session);
+  }
 
   function handleCancelDelete() {
     setSessionPendingDelete(null);
@@ -546,11 +555,10 @@ export default function HistoryPage() {
     setSessionPendingDelete(null);
 
     showToast({
-  type: "success",
-  title: "Session deleted",
-  description: `${sessionLabel} was removed and your progress has been updated.`,
-});
-
+      type: "success",
+      title: "Session deleted",
+      description: `${sessionLabel} was removed and your progress has been updated.`,
+    });
   }
 
   function handleClearResults() {
@@ -598,32 +606,37 @@ export default function HistoryPage() {
             </div>
           ) : null}
 
-          
-
           {!mounted ? (
             <section className="mt-10 min-h-72 animate-pulse rounded-3xl bg-zinc-200 dark:bg-zinc-900" />
           ) : sessions.length === 0 ? (
-            <section className="mt-10 flex min-h-72 flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900">
-              <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
-                <History size={25} />
+            <section className="mt-10 flex min-h-80 flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900">
+              <div className="flex h-16 w-16 items-center justify-center rounded-3xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                <History size={28} />
               </div>
 
-              <h2 className="mt-5 text-xl font-black">
-                No sessions yet
+              <h2 className="mt-6 text-2xl font-black tracking-tight">
+                Your first session starts here
               </h2>
 
-              <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                Your completed gym sessions will appear
-                here after your first check-in.
+              <p className="mt-3 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                Complete your first workout and GymFlow
+                will keep your activity, mood and
+                progress together.
               </p>
 
-              <div className="mt-6 flex items-center gap-2 rounded-2xl bg-zinc-100 px-4 py-3 text-sm text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
-                <CalendarDays size={17} />
-                Start by checking in from the Today page.
-              </div>
+              <button
+                type="button"
+                onClick={
+                  handleStartFirstSession
+                }
+                className="mt-7 flex items-center justify-center gap-2 rounded-2xl bg-violet-600 px-6 py-3.5 text-sm font-bold text-white shadow-lg shadow-violet-600/20 transition hover:bg-violet-700 active:scale-[0.98]"
+              >
+                <CalendarDays size={18} />
+                Start First Session
+              </button>
             </section>
           ) : filteredSessions.length === 0 ? (
-            <section className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900">
+                        <section className="mt-8 flex min-h-64 flex-col items-center justify-center rounded-3xl border border-dashed border-zinc-300 bg-white p-8 text-center dark:border-zinc-700 dark:bg-zinc-900">
               <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-zinc-100 text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
                 <History size={25} />
               </div>
@@ -666,14 +679,20 @@ export default function HistoryPage() {
                 </p>
               </div>
 
-              {filteredSessions.map((session) => (
-                <SessionCard
-                  key={session.id}
-                  session={session}
-                  onEdit={handleEditRequest}
-                  onDelete={handleDeleteRequest}
-                />
-              ))}
+              {filteredSessions.map(
+                (session) => (
+                  <SessionCard
+                    key={session.id}
+                    session={session}
+                    onEdit={
+                      handleEditRequest
+                    }
+                    onDelete={
+                      handleDeleteRequest
+                    }
+                  />
+                ),
+              )}
             </section>
           )}
         </div>
