@@ -1,10 +1,12 @@
 "use client";
 
 import { Dumbbell, Flame, Target } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 import { ActiveSessionCard } from "@/components/check-in/active-session-card";
 import { CheckInDialog } from "@/components/check-in/check-in-dialog";
+import { SessionCompletionSummary } from "@/components/check-in/session-completion-summary";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TodayGreeting } from "@/components/today/today-greeting";
 import { getCompletedSessionsThisWeek } from "@/lib/session-analytics";
@@ -12,6 +14,8 @@ import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
 export default function Home() {
+  const router = useRouter();
+
   const [checkInOpen, setCheckInOpen] =
     useState(false);
 
@@ -23,14 +27,29 @@ export default function Home() {
     (state) => state.completedSessions,
   );
 
+  const lastCompletedSession =
+    useSessionStore(
+      (state) =>
+        state.lastCompletedSession,
+    );
+
+  const dismissLastCompletedSession =
+    useSessionStore(
+      (state) =>
+        state.dismissLastCompletedSession,
+    );
+
   const weeklyTarget = useSettingsStore(
     (state) => state.weeklyTarget,
   );
 
   const sessionsThisWeek =
-    getCompletedSessionsThisWeek(completedSessions);
+    getCompletedSessionsThisWeek(
+      completedSessions,
+    );
 
-  const completedThisWeek = sessionsThisWeek.length;
+  const completedThisWeek =
+    sessionsThisWeek.length;
 
   const remainingSessions = Math.max(
     0,
@@ -39,7 +58,8 @@ export default function Home() {
 
   const weeklyProgress = Math.min(
     100,
-    (completedThisWeek / weeklyTarget) * 100,
+    (completedThisWeek / weeklyTarget) *
+      100,
   );
 
   const weeklyMessage =
@@ -49,7 +69,9 @@ export default function Home() {
         : `Weekly goal exceeded by ${
             completedThisWeek - weeklyTarget
           } session${
-            completedThisWeek - weeklyTarget === 1
+            completedThisWeek -
+              weeklyTarget ===
+            1
               ? ""
               : "s"
           }.`
@@ -57,125 +79,153 @@ export default function Home() {
         ? "One more session to achieve your weekly target."
         : `${remainingSessions} more sessions to achieve your weekly target.`;
 
+  function handleViewHistory() {
+    dismissLastCompletedSession();
+    router.push("/history");
+  }
+
   return (
-    <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
-      <div className="mx-auto max-w-6xl">
-        <header className="flex items-center justify-between lg:justify-end">
-          <div className="flex min-w-0 items-center gap-3 lg:hidden">
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-600/20">
-              <Dumbbell size={22} />
-            </div>
+    <>
+      <main className="min-h-screen px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
+        <div className="mx-auto max-w-6xl">
+          <header className="flex items-center justify-between lg:justify-end">
+            <div className="flex min-w-0 items-center gap-3 lg:hidden">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-600 text-white shadow-lg shadow-violet-600/20">
+                <Dumbbell size={22} />
+              </div>
 
-            <div className="min-w-0">
-              <p className="text-lg font-black tracking-tight">
-                GymFlow
-              </p>
-
-              <a
-                href="https://ridzu.one"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Visit Ridzjuan personal website"
-                className="block truncate text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
-              >
-                Build consistency with{" "}
-                <span className="font-bold text-violet-600 dark:text-violet-400">
-                  Ridzjuan
-                </span>
-              </a>
-            </div>
-          </div>
-
-          <ThemeToggle />
-        </header>
-
-        <section className="mt-10 grid gap-6 lg:grid-cols-2">
-          <div>
-            <TodayGreeting />
-
-            <h1 className="mt-5 max-w-xl text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">
-              {activeSession
-                ? "You showed up."
-                : "Ready to show up today?"}
-            </h1>
-
-            <p className="mt-3 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
-              {activeSession
-                ? "Your session is active. Focus on moving and let GymFlow count the time."
-                : "You do not need the perfect workout. Start with a small commitment and protect the habit."}
-            </p>
-          </div>
-
-          <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-xl shadow-zinc-950/5 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black/20">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                  This week
+              <div className="min-w-0">
+                <p className="text-lg font-black tracking-tight">
+                  GymFlow
                 </p>
 
-                <p className="mt-1 text-3xl font-black">
-                  {completedThisWeek} / {weeklyTarget}
-                </p>
-              </div>
-
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
-                <Target size={23} />
+                <a
+                  href="https://ridzu.one"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit Ridzjuan personal website"
+                  className="block truncate text-xs text-zinc-500 transition-colors hover:text-violet-600 dark:text-zinc-400 dark:hover:text-violet-400"
+                >
+                  Build consistency with{" "}
+                  <span className="font-bold text-violet-600 dark:text-violet-400">
+                    Ridzjuan
+                  </span>
+                </a>
               </div>
             </div>
 
-            <div className="mt-6 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500"
-                style={{
-                  width: `${weeklyProgress}%`,
-                }}
-              />
+            <ThemeToggle />
+          </header>
+
+          <section className="mt-10 grid gap-6 lg:grid-cols-2">
+            <div>
+              <TodayGreeting />
+
+              <h1 className="mt-5 max-w-xl text-3xl font-black leading-tight tracking-tight sm:text-4xl lg:text-5xl">
+                {activeSession
+                  ? "You showed up."
+                  : "Ready to show up today?"}
+              </h1>
+
+              <p className="mt-3 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
+                {activeSession
+                  ? "Your session is active. Focus on moving and let GymFlow count the time."
+                  : "You do not need the perfect workout. Start with a small commitment and protect the habit."}
+              </p>
             </div>
 
-            <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
-              {weeklyMessage}
-            </p>
-          </div>
-        </section>
+            <div className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-xl shadow-zinc-950/5 dark:border-zinc-800 dark:bg-zinc-900 dark:shadow-black/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                    This week
+                  </p>
 
-        {activeSession ? (
-          <ActiveSessionCard />
-        ) : (
-          <section className="mt-8 rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
-            <div className="flex max-w-xl flex-col">
-              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-                <Flame size={23} />
+                  <p className="mt-1 text-3xl font-black">
+                    {completedThisWeek} /{" "}
+                    {weeklyTarget}
+                  </p>
+                </div>
+
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
+                  <Target size={23} />
+                </div>
               </div>
 
-              <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-violet-100">
-                Today&apos;s commitment
+              <div className="mt-6 h-3 overflow-hidden rounded-full bg-zinc-100 dark:bg-zinc-800">
+                <div
+                  className="h-full rounded-full bg-gradient-to-r from-violet-600 to-fuchsia-500 transition-all duration-500"
+                  style={{
+                    width: `${weeklyProgress}%`,
+                  }}
+                />
+              </div>
+
+              <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">
+                {weeklyMessage}
               </p>
-
-              <h2 className="mt-2 text-3xl font-black">
-                Just begin.
-              </h2>
-
-              <p className="mt-3 text-violet-100">
-                Check in when you arrive and let the
-                session count itself.
-              </p>
-
-              <button
-                type="button"
-                onClick={() => setCheckInOpen(true)}
-                className="mt-7 rounded-2xl bg-white px-6 py-4 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98]"
-              >
-                Check In Now
-              </button>
             </div>
           </section>
-        )}
 
-        <CheckInDialog
-          open={checkInOpen}
-          onClose={() => setCheckInOpen(false)}
+          {activeSession ? (
+            <ActiveSessionCard />
+          ) : (
+            <section className="mt-8 rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
+              <div className="flex max-w-xl flex-col">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
+                  <Flame size={23} />
+                </div>
+
+                <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-violet-100">
+                  Today&apos;s commitment
+                </p>
+
+                <h2 className="mt-2 text-3xl font-black">
+                  Just begin.
+                </h2>
+
+                <p className="mt-3 text-violet-100">
+                  Check in when you arrive and let the
+                  session count itself.
+                </p>
+
+                <button
+                  type="button"
+                  onClick={() =>
+                    setCheckInOpen(true)
+                  }
+                  className="mt-7 rounded-2xl bg-white px-6 py-4 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98]"
+                >
+                  Check In Now
+                </button>
+              </div>
+            </section>
+          )}
+
+          <CheckInDialog
+            open={checkInOpen}
+            onClose={() =>
+              setCheckInOpen(false)
+            }
+          />
+        </div>
+      </main>
+
+      {lastCompletedSession ? (
+        <SessionCompletionSummary
+          session={lastCompletedSession}
+          completedThisWeek={
+            completedThisWeek
+          }
+          weeklyTarget={weeklyTarget}
+          onDone={
+            dismissLastCompletedSession
+          }
+          onViewHistory={
+            handleViewHistory
+          }
         />
-      </div>
-    </main>
+      ) : null}
+    </>
   );
 }
