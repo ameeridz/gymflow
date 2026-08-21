@@ -1,25 +1,47 @@
 "use client";
 
 import {
+  CheckCircle2,
   Download,
+  FileJson,
   Palette,
   RotateCcw,
   Target,
   Upload,
   UserRound,
+  XCircle,
 } from "lucide-react";
 import { useTheme } from "next-themes";
-import { useState } from "react";
+import {
+  useRef,
+  useState,
+} from "react";
 
+import {
+  parseBackupFile,
+  type GymFlowBackup,
+} from "@/lib/backup-validation";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
-const weeklyTargetOptions = [2, 3, 4, 5, 6, 7];
+const weeklyTargetOptions = [
+  2,
+  3,
+  4,
+  5,
+  6,
+  7,
+];
 
 type ThemeOption = {
   value: "light" | "dark" | "system";
   label: string;
 };
+
+type ImportMessage = {
+  type: "success" | "error";
+  text: string;
+} | null;
 
 const themeOptions: ThemeOption[] = [
   {
@@ -35,6 +57,16 @@ const themeOptions: ThemeOption[] = [
     label: "System",
   },
 ];
+
+function formatBackupDate(dateValue: string) {
+  return new Intl.DateTimeFormat("en-MY", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+  }).format(new Date(dateValue));
+}
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
@@ -55,9 +87,19 @@ export default function SettingsPage() {
     (state) => state.setWeeklyTarget,
   );
 
+  const restoreSettings = useSettingsStore(
+    (state) => state.restoreSettings,
+  );
+
   const completedSessions = useSessionStore(
     (state) => state.completedSessions,
   );
+
+  const restoreCompletedSessions =
+    useSessionStore(
+      (state) =>
+        state.restoreCompletedSessions,
+    );
 
   const [nameInput, setNameInput] =
     useState(displayName);
@@ -67,6 +109,22 @@ export default function SettingsPage() {
     setShowResetConfirmation,
   ] = useState(false);
 
+  const [
+    selectedBackup,
+    setSelectedBackup,
+  ] = useState<GymFlowBackup | null>(null);
+
+  const [
+    selectedFileName,
+    setSelectedFileName,
+  ] = useState("");
+
+  const [importMessage, setImportMessage] =
+    useState<ImportMessage>(null);
+
+  const fileInputRef =
+    useRef<HTMLInputElement>(null);
+
   function handleSaveName() {
     setDisplayName(nameInput);
   }
@@ -75,11 +133,13 @@ export default function SettingsPage() {
     const backup = {
       version: 1,
       exportedAt: new Date().toISOString(),
+
       settings: {
         displayName,
         weeklyTarget,
         theme: theme ?? "system",
       },
+
       completedSessions,
     };
 
@@ -93,21 +153,130 @@ export default function SettingsPage() {
       type: "application/json",
     });
 
-    const downloadUrl = URL.createObjectURL(blob);
-    const link = document.createElement("a");
+    const downloadUrl =
+      URL.createObjectURL(blob);
+
+    const link =
+      document.createElement("a");
 
     const exportDate = new Date()
       .toISOString()
       .split("T")[0];
 
     link.href = downloadUrl;
-    link.download = `gymflow-backup-${exportDate}.json`;
+    link.download =
+      `gymflow-backup-${exportDate}.json`;
 
     document.body.appendChild(link);
     link.click();
     link.remove();
 
     URL.revokeObjectURL(downloadUrl);
+  }
+
+  function clearSelectedBackup() {
+    setSelectedBackup(null);
+    setSelectedFileName("");
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  async function handleBackupFileChange(
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) {
+    const file = event.target.files?.[0];
+
+    setImportMessage(null);
+    setSelectedBackup(null);
+    setSelectedFileName("");
+
+    if (!file) {
+      return;
+    }
+
+    if (
+      !file.name.toLowerCase().endsWith(".json")
+    ) {
+      setImportMessage({
+        type: "error",
+        text:
+          "Please select a GymFlow JSON backup file.",
+      });
+
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const fileContent = await file.text();
+
+      const validationResult =
+        parseBackupFile(fileContent);
+
+      if (!validationResult.valid) {
+        setImportMessage({
+          type: "error",
+          text: validationResult.error,
+        });
+
+        event.target.value = "";
+        return;
+      }
+
+      setSelectedBackup(
+        validationResult.data,
+      );
+
+      setSelectedFileName(file.name);
+    } catch {
+      setImportMessage({
+        type: "error",
+        text:
+          "GymFlow could not read the selected backup file.",
+      });
+
+      event.target.value = "";
+    }
+  }
+
+  function handleConfirmImport() {
+    if (!selectedBackup) {
+      return;
+    }
+
+    restoreCompletedSessions(
+      selectedBackup.completedSessions,
+    );
+
+    restoreSettings({
+      displayName:
+        selectedBackup.settings.displayName,
+
+      weeklyTarget:
+        selectedBackup.settings.weeklyTarget,
+    });
+
+    setTheme(selectedBackup.settings.theme);
+
+    setNameInput(
+      selectedBackup.settings.displayName,
+    );
+
+    const sessionCount =
+      selectedBackup.completedSessions.length;
+
+    clearSelectedBackup();
+
+    setImportMessage({
+      type: "success",
+      text: `${sessionCount} completed ${
+        sessionCount === 1
+          ? "session"
+          : "sessions"
+      } restored successfully.`,
+    });
   }
 
   function handleResetData() {
@@ -287,7 +456,7 @@ export default function SettingsPage() {
           <article className="rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
             <div className="flex items-start gap-4">
               <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-violet-100 text-violet-600 dark:bg-violet-500/15 dark:text-violet-400">
-                <Download size={21} />
+                <FileJson size={21} />
               </div>
 
               <div>
@@ -296,8 +465,8 @@ export default function SettingsPage() {
                 </p>
 
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Download your GymFlow history and
-                  preferences as JSON.
+                  Export or restore your GymFlow history
+                  and preferences.
                 </p>
               </div>
             </div>
@@ -311,14 +480,146 @@ export default function SettingsPage() {
               Export Backup
             </button>
 
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              onChange={handleBackupFileChange}
+              className="hidden"
+            />
+
             <button
               type="button"
-              disabled
-              className="mt-3 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-5 py-3 font-bold text-zinc-400 dark:border-zinc-700"
+              onClick={() =>
+                fileInputRef.current?.click()
+              }
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-zinc-200 px-5 py-3 font-bold text-zinc-700 transition hover:bg-zinc-100 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
             >
               <Upload size={18} />
-              Import Coming Soon
+              Import Backup
             </button>
+
+            {importMessage ? (
+              <div
+                className={`mt-4 flex items-start gap-3 rounded-2xl p-4 text-sm ${
+                  importMessage.type === "success"
+                    ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                    : "bg-rose-50 text-rose-700 dark:bg-rose-500/10 dark:text-rose-300"
+                }`}
+              >
+                {importMessage.type === "success" ? (
+                  <CheckCircle2
+                    size={19}
+                    className="mt-0.5 shrink-0"
+                  />
+                ) : (
+                  <XCircle
+                    size={19}
+                    className="mt-0.5 shrink-0"
+                  />
+                )}
+
+                <p>{importMessage.text}</p>
+              </div>
+            ) : null}
+
+            {selectedBackup ? (
+              <div className="mt-4 rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-500/20 dark:bg-violet-500/10">
+                <p className="font-bold text-violet-700 dark:text-violet-300">
+                  Backup ready to import
+                </p>
+
+                <p className="mt-1 break-all text-xs text-violet-600/80 dark:text-violet-300/70">
+                  {selectedFileName}
+                </p>
+
+                <dl className="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                  <div>
+                    <dt className="text-zinc-500 dark:text-zinc-400">
+                      Exported
+                    </dt>
+
+                    <dd className="mt-1 font-bold">
+                      {formatBackupDate(
+                        selectedBackup.exportedAt,
+                      )}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-zinc-500 dark:text-zinc-400">
+                      Completed sessions
+                    </dt>
+
+                    <dd className="mt-1 font-bold">
+                      {
+                        selectedBackup
+                          .completedSessions.length
+                      }
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-zinc-500 dark:text-zinc-400">
+                      Display name
+                    </dt>
+
+                    <dd className="mt-1 font-bold">
+                      {selectedBackup.settings
+                        .displayName || "Not set"}
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-zinc-500 dark:text-zinc-400">
+                      Weekly target
+                    </dt>
+
+                    <dd className="mt-1 font-bold">
+                      {
+                        selectedBackup.settings
+                          .weeklyTarget
+                      }{" "}
+                      sessions
+                    </dd>
+                  </div>
+
+                  <div>
+                    <dt className="text-zinc-500 dark:text-zinc-400">
+                      Theme
+                    </dt>
+
+                    <dd className="mt-1 font-bold capitalize">
+                      {selectedBackup.settings.theme}
+                    </dd>
+                  </div>
+                </dl>
+
+                <p className="mt-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+                  Importing will replace your current
+                  completed sessions and preferences.
+                  Active sessions will not be restored.
+                </p>
+
+                <div className="mt-4 grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={clearSelectedBackup}
+                    className="rounded-xl border border-zinc-200 px-4 py-3 font-bold transition hover:bg-white dark:border-zinc-700 dark:hover:bg-zinc-900"
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleConfirmImport}
+                    className="rounded-xl bg-violet-600 px-4 py-3 font-bold text-white transition hover:bg-violet-700"
+                  >
+                    Confirm Import
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </article>
 
           <article className="rounded-3xl border border-rose-200 bg-rose-50 p-5 dark:border-rose-500/20 dark:bg-rose-500/10 sm:p-6">
