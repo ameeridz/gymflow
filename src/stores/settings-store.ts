@@ -26,9 +26,9 @@ export const useSettingsStore =
 
         setWeeklyTarget: (target) => {
           const safeTarget = Math.min(
-            5,
+            7,
             Math.max(2, target),
-          );
+            );
 
           set({
             weeklyTarget: safeTarget,

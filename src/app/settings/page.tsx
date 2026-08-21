@@ -14,7 +14,7 @@ import { useState } from "react";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 
-const weeklyTargetOptions = [2, 3, 4, 5];
+const weeklyTargetOptions = [2, 3, 4, 5, 6, 7];
 
 type ThemeOption = {
   value: "light" | "dark" | "system";
@@ -217,7 +217,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="mt-5 grid grid-cols-4 gap-2">
+            <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-6">
               {weeklyTargetOptions.map((target) => {
                 const selected =
                   weeklyTarget === target;
