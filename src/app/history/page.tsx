@@ -27,6 +27,10 @@ import {
   HistoryActivityFilter,
   type HistoryActivityFilter as HistoryActivityFilterValue,
 } from "@/components/history/history-activity-filter";
+import {
+  HistorySearchSort,
+  type HistorySortOrder,
+} from "@/components/history/history-search-sort";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { useSessionStore } from "@/stores/session-store";
 import type {
@@ -333,6 +337,12 @@ export default function HistoryPage() {
   const [activityFilter, setActivityFilter] =
     useState<HistoryActivityFilterValue>("all");
 
+  const [searchQuery, setSearchQuery] =
+    useState("");
+
+  const [sortOrder, setSortOrder] =
+    useState<HistorySortOrder>("newest");
+
   const completedSessions = useSessionStore(
     (state) => state.completedSessions,
   );
@@ -404,7 +414,10 @@ export default function HistoryPage() {
     ).length,
   };
 
-  const filteredSessions =
+  const normalizedSearchQuery =
+    searchQuery.trim().toLowerCase();
+
+  const activityFilteredSessions =
     activityFilter === "all"
       ? sessions
       : sessions.filter(
@@ -413,10 +426,62 @@ export default function HistoryPage() {
             activityFilter,
         );
 
+  const searchedSessions =
+    normalizedSearchQuery.length === 0
+      ? activityFilteredSessions
+      : activityFilteredSessions.filter(
+          (session) => {
+            const activityLabel =
+              activityLabels[
+                session.activityType
+              ].toLowerCase();
+
+            const moodLabel = session.mood
+              ? moodLabels[
+                  session.mood
+                ].toLowerCase()
+              : "";
+
+            const note =
+              session.note.toLowerCase();
+
+            return (
+              note.includes(
+                normalizedSearchQuery,
+              ) ||
+              activityLabel.includes(
+                normalizedSearchQuery,
+              ) ||
+              moodLabel.includes(
+                normalizedSearchQuery,
+              )
+            );
+          },
+        );
+
+  const filteredSessions = [
+    ...searchedSessions,
+  ].sort((firstSession, secondSession) => {
+    const firstTime = new Date(
+      firstSession.startedAt,
+    ).getTime();
+
+    const secondTime = new Date(
+      secondSession.startedAt,
+    ).getTime();
+
+    return sortOrder === "newest"
+      ? secondTime - firstTime
+      : firstTime - secondTime;
+  });
+
   const activeFilterLabel =
     activityFilter === "all"
       ? "All"
       : activityLabels[activityFilter];
+
+  const hasActiveSearch =
+    normalizedSearchQuery.length > 0;
 
   function handleEditRequest(
     session: GymSession,
@@ -470,7 +535,7 @@ export default function HistoryPage() {
         sessionPendingDelete.activityType
       ];
 
-        deleteCompletedSession(
+    deleteCompletedSession(
       sessionPendingDelete.id,
     );
 
@@ -479,6 +544,11 @@ export default function HistoryPage() {
     setFeedback(
       `${sessionLabel} session deleted successfully. Your progress has been updated.`,
     );
+  }
+
+  function handleClearResults() {
+    setActivityFilter("all");
+    setSearchQuery("");
   }
 
   return (
@@ -505,11 +575,18 @@ export default function HistoryPage() {
           </header>
 
           {mounted && sessions.length > 0 ? (
-            <div className="mt-8">
+            <div className="mt-8 space-y-4">
               <HistoryActivityFilter
                 value={activityFilter}
                 onChange={setActivityFilter}
                 sessionCounts={sessionCounts}
+              />
+
+              <HistorySearchSort
+                searchQuery={searchQuery}
+                sortOrder={sortOrder}
+                onSearchChange={setSearchQuery}
+                onSortChange={setSortOrder}
               />
             </div>
           ) : null}
@@ -554,24 +631,25 @@ export default function HistoryPage() {
               </div>
 
               <h2 className="mt-5 text-xl font-black">
-                No{" "}
-                {activeFilterLabel.toLowerCase()}{" "}
-                sessions
+                {hasActiveSearch
+                  ? "No matching sessions"
+                  : `No ${activeFilterLabel.toLowerCase()} sessions`}
               </h2>
 
               <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-                There are no completed sessions matching
-                this activity filter yet.
+                {hasActiveSearch
+                  ? `No sessions match "${searchQuery.trim()}". Try another keyword or clear the search.`
+                  : "There are no completed sessions matching this activity filter yet."}
               </p>
 
               <button
                 type="button"
-                onClick={() =>
-                  setActivityFilter("all")
-                }
+                onClick={handleClearResults}
                 className="mt-6 rounded-2xl bg-violet-600 px-5 py-3 text-sm font-bold text-white transition hover:bg-violet-700"
               >
-                Show All Sessions
+                {hasActiveSearch
+                  ? "Clear Search"
+                  : "Show All Sessions"}
               </button>
             </section>
           ) : (
@@ -579,9 +657,11 @@ export default function HistoryPage() {
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-zinc-500 dark:text-zinc-400">
                   {filteredSessions.length}{" "}
-                  {activityFilter === "all"
-                    ? "completed"
-                    : activeFilterLabel.toLowerCase()}{" "}
+                  {hasActiveSearch
+                    ? "matching"
+                    : activityFilter === "all"
+                      ? "completed"
+                      : activeFilterLabel.toLowerCase()}{" "}
                   {filteredSessions.length === 1
                     ? "session"
                     : "sessions"}
