@@ -23,6 +23,7 @@ import {
 } from "@/lib/backup-validation";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
+import { useToastStore } from "@/stores/toast-store";
 
 const weeklyTargetOptions = [
   2,
@@ -70,6 +71,10 @@ function formatBackupDate(dateValue: string) {
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+
+  const showToast = useToastStore(
+  (state) => state.showToast,
+);
 
   const displayName = useSettingsStore(
     (state) => state.displayName,
@@ -126,7 +131,20 @@ export default function SettingsPage() {
     useRef<HTMLInputElement>(null);
 
   function handleSaveName() {
-    setDisplayName(nameInput);
+  const cleanName = nameInput
+    .trim()
+    .slice(0, 40);
+
+  setDisplayName(cleanName);
+  setNameInput(cleanName);
+
+  showToast({
+    type: "success",
+    title: "Name saved",
+    description: cleanName
+      ? `GymFlow will greet you as ${cleanName}.`
+      : "Your personal greeting has been removed.",
+  });
   }
 
   function handleExportData() {
@@ -269,14 +287,16 @@ export default function SettingsPage() {
 
     clearSelectedBackup();
 
-    setImportMessage({
-      type: "success",
-      text: `${sessionCount} completed ${
-        sessionCount === 1
-          ? "session"
-          : "sessions"
-      } restored successfully.`,
-    });
+showToast({
+  type: "success",
+  title: "Backup restored",
+  description: `${sessionCount} completed ${
+    sessionCount === 1
+      ? "session"
+      : "sessions"
+  } and your preferences were restored successfully.`,
+});
+
   }
 
   function handleResetData() {
@@ -395,9 +415,17 @@ export default function SettingsPage() {
                   <button
                     key={target}
                     type="button"
-                    onClick={() =>
-                      setWeeklyTarget(target)
-                    }
+                    onClick={() => {
+                    setWeeklyTarget(target);
+
+                    showToast({
+                      type: "success",
+                      title: "Weekly goal updated",
+                      description: `Your new target is ${target} session${
+                        target === 1 ? "" : "s"
+                      } per week.`,
+                    });
+                    }}
                     className={`rounded-2xl px-4 py-3 font-bold transition ${
                       selected
                         ? "bg-violet-600 text-white shadow-lg shadow-violet-600/20"

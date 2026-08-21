@@ -4,6 +4,7 @@ import {
   DesktopSidebar,
   MobileNavigation,
 } from "@/components/app-navigation";
+import { ToastViewport } from "@/components/toast/toast-viewport";
 
 interface AppShellProps {
   children: ReactNode;
@@ -21,6 +22,8 @@ export function AppShell({
       </div>
 
       <MobileNavigation />
+
+      <ToastViewport />
     </div>
   );
 }
