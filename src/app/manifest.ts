@@ -2,11 +2,13 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "GymFlow",
-    short_name: "GymFlow",
+    name: "Gymeer",
+    short_name: "Gymeer",
     description:
-      "A lightweight gym motivation and consistency tracker.",
+      "A lightweight gym check-in, workout timer, training-day and recovery tracker.",
     start_url: "/",
+    scope: "/",
+    id: "/",
     display: "standalone",
     background_color: "#09090b",
     theme_color: "#7c3aed",

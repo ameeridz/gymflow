@@ -323,7 +323,7 @@ export function validateBackup(
     return {
       valid: false,
       error:
-        "The selected file is not a GymFlow backup.",
+        "The selected file is not a Gymeer backup.",
     };
   }
 
@@ -331,7 +331,7 @@ export function validateBackup(
     return {
       valid: false,
       error:
-        "This backup version is not supported by GymFlow.",
+        "This backup version is not supported by Gymeer.",
     };
   }
 

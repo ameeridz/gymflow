@@ -182,11 +182,11 @@ export function InstallGymFlowCard() {
 
         <div>
           <p className="font-bold">
-            Install GymFlow
+            Install Gymeer
           </p>
 
           <p className="mt-1 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-            Add GymFlow to your home screen for quicker
+            Add Gymeer to your home screen for quicker
             access and a more app-like experience.
           </p>
         </div>
@@ -215,7 +215,7 @@ export function InstallGymFlowCard() {
       {isIos ? (
         <section className="mt-5 rounded-2xl border border-violet-200 bg-white/80 p-4 dark:border-violet-500/20 dark:bg-zinc-950/40">
           <p className="text-sm font-bold">
-            Add GymFlow on iPhone or iPad
+            Add Gymeer on iPhone or iPad
           </p>
 
           <ol className="mt-4 space-y-4">
@@ -231,7 +231,7 @@ export function InstallGymFlowCard() {
                 />
 
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                  Open GymFlow in Safari then tap the
+                  Open Gymeer in Safari then tap the
                   Share button.
                 </p>
               </div>
@@ -267,7 +267,7 @@ export function InstallGymFlowCard() {
                 />
 
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                  Tap Add to place GymFlow on your home
+                  Tap Add to place Gymeer on your home
                   screen.
                 </p>
               </div>
@@ -284,7 +284,7 @@ export function InstallGymFlowCard() {
             <Download size={18} />
 
             {deferredPrompt
-              ? "Install GymFlow"
+              ? "Install Gymeer"
               : "View Install Instructions"}
           </button>
 

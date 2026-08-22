@@ -22,18 +22,66 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl = "https://gymeer.ridzu.one";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
+
   title: {
-    default: "GymFlow",
-    template: "%s | GymFlow",
+    default:
+      "Gymeer — Gym Check-In & Training Day Tracker",
+    template: "%s | Gymeer",
   },
 
   description:
-    "A lightweight gym motivation and consistency tracker.",
+    "Gymeer is a lightweight gym check-in, workout timer, training-day and recovery tracker created by Ridzjuan.",
 
-  applicationName: "GymFlow",
+  applicationName: "Gymeer",
+
+  alternates: {
+    canonical: "/",
+  },
 
   manifest: "/manifest.webmanifest",
+
+  keywords: [
+    "Gymeer",
+    "gym check-in",
+    "workout timer",
+    "training day tracker",
+    "gym consistency tracker",
+    "rest day tracker",
+    "fitness PWA",
+    "Ridzjuan",
+  ],
+
+  authors: [
+    {
+      name: "Ridzjuan",
+      url: "https://ridzu.one",
+    },
+  ],
+
+  creator: "Ridzjuan",
+  publisher: "Ridzjuan",
+
+  openGraph: {
+    type: "website",
+    url: siteUrl,
+    siteName: "Gymeer",
+    title:
+      "Gymeer — Gym Check-In & Training Day Tracker",
+    description:
+      "Build consistency one training day at a time with gym check-ins, workout timers, recovery tracking and weekly streaks.",
+  },
+
+  twitter: {
+    card: "summary_large_image",
+    title:
+      "Gymeer — Gym Check-In & Training Day Tracker",
+    description:
+      "Build consistency one training day at a time with gym check-ins, workout timers, recovery tracking and weekly streaks.",
+  },
 
   icons: {
     icon: [
@@ -60,7 +108,7 @@ export const metadata: Metadata = {
 
   appleWebApp: {
     capable: true,
-    title: "GymFlow",
+    title: "Gymeer",
     statusBarStyle: "black-translucent",
   },
 
@@ -92,11 +140,35 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const websiteStructuredData = {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    name: "Gymeer",
+    alternateName: "Gymeer by Ridzjuan",
+    url: `${siteUrl}/`,
+    description:
+      "A lightweight gym check-in, workout timer, training-day and recovery tracker.",
+    creator: {
+      "@type": "Person",
+      name: "Ridzjuan",
+      url: "https://ridzu.one",
+    },
+  };
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(
+              websiteStructuredData,
+            ),
+          }}
+        />
+
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
