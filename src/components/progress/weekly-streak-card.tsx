@@ -26,15 +26,37 @@ export function WeeklyStreakCard({
     weeklySummaries,
   } = streakResult;
 
-  const recentWeeks =
-    weeklySummaries.slice(0, 4);
+  const recentWeeks = weeklySummaries.slice(0, 4);
+  const currentWeek = weeklySummaries[0];
 
-  const streakMessage =
-    currentStreak === 0
-      ? "Complete your weekly goal to begin a consistency streak."
-      : currentStreak === 1
-        ? "Your consistency streak has started."
-        : `You have achieved your weekly goal for ${currentStreak} consecutive weeks.`;
+  const remainingTrainingDays = currentWeek
+    ? Math.max(
+        0,
+        currentWeek.target -
+          currentWeek.sessionCount,
+      )
+    : 0;
+
+  const currentWeekAchieved =
+    currentWeek?.achieved ?? false;
+
+  const streakHeadline = currentWeekAchieved
+    ? currentStreak === 1
+      ? "Your first streak is secured"
+      : `${currentStreak}-week streak secured`
+    : currentStreak > 0
+      ? `${currentStreak}-week streak active`
+      : "Start your first streak";
+
+  const streakMessage = currentWeekAchieved
+    ? "This week’s training-day goal is complete. Keep the momentum going."
+    : remainingTrainingDays === 1
+      ? currentStreak > 0
+        ? "Complete one more training day this week to extend your streak."
+        : "Complete one more training day this week to begin your streak."
+      : currentStreak > 0
+        ? `Complete ${remainingTrainingDays} more training days this week to extend your streak.`
+        : `Complete ${remainingTrainingDays} more training days this week to begin your streak.`;
 
   return (
     <section className="mt-0 grid gap-4 lg:mt-6 lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)]">
@@ -68,16 +90,28 @@ export function WeeklyStreakCard({
             </div>
           </div>
 
-          {currentStreak > 0 ? (
-            <div className="flex h-10 items-center rounded-full bg-orange-100 px-3 text-xs font-bold text-orange-700 dark:bg-orange-500/15 dark:text-orange-300 lg:hidden">
-              Keep going
-            </div>
-          ) : null}
+          <div
+            className={`flex h-10 items-center rounded-full px-3 text-xs font-bold lg:hidden ${
+              currentWeekAchieved
+                ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300"
+                : "bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-orange-300"
+            }`}
+          >
+            {currentWeekAchieved
+              ? "Secured"
+              : "Keep going"}
+          </div>
         </div>
 
-        <p className="mt-3 text-sm leading-6 text-zinc-600 dark:text-zinc-400 sm:mt-4">
-          {streakMessage}
-        </p>
+        <div className="mt-4 rounded-2xl bg-white/70 p-4 dark:bg-zinc-950/30">
+          <p className="text-sm font-black text-zinc-800 dark:text-zinc-100">
+            {streakHeadline}
+          </p>
+
+          <p className="mt-2 text-sm leading-6 text-zinc-600 dark:text-zinc-400">
+            {streakMessage}
+          </p>
+        </div>
 
         <div className="mt-5 grid grid-cols-2 gap-3 lg:mt-7">
           <div className="rounded-2xl bg-white/80 p-3 dark:bg-zinc-950/40 sm:p-4">
@@ -127,20 +161,20 @@ export function WeeklyStreakCard({
       </article>
 
       <article className="rounded-[2rem] border border-zinc-200 bg-white p-5 shadow-sm dark:border-zinc-800 dark:bg-zinc-900 sm:p-6 lg:p-8">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400 sm:text-sm">
-              Recent weeks
-            </p>
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-violet-600 dark:text-violet-400 sm:text-sm">
+            Recent weeks
+          </p>
 
-            <h2 className="mt-1 text-xl font-black tracking-tight sm:mt-2 sm:text-2xl">
-              Consistency history
-            </h2>
+          <h2 className="mt-1 text-xl font-black tracking-tight sm:mt-2 sm:text-2xl">
+            Consistency history
+          </h2>
 
-            <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400 sm:mt-2 sm:text-sm sm:leading-6">
-              Weekly goals run from Monday to Sunday.
-            </p>
-          </div>
+          <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400 sm:mt-2 sm:text-sm sm:leading-6">
+            Training-day goals run from Monday to
+            Sunday. Multiple sessions on one day count
+            as one training day.
+          </p>
         </div>
 
         <div className="mt-4 grid gap-2 sm:mt-5 sm:grid-cols-2 lg:mt-6 lg:grid-cols-1 lg:gap-3">
@@ -170,16 +204,22 @@ export function WeeklyStreakCard({
                 </div>
 
                 <div className="flex shrink-0 items-center gap-2 sm:gap-3">
-                  <p className="text-sm font-black">
-                    {summary.sessionCount} /{" "}
-                    {summary.target}
-                  </p>
+                  <div className="text-right">
+                    <p className="text-sm font-black">
+                      {summary.sessionCount} /{" "}
+                      {summary.target}
+                    </p>
+
+                    <p className="mt-0.5 text-[0.65rem] font-semibold text-zinc-500 dark:text-zinc-400">
+                      training days
+                    </p>
+                  </div>
 
                   <div
                     aria-label={
                       summary.achieved
-                        ? "Weekly goal achieved"
-                        : "Weekly goal not achieved"
+                        ? "Training-day goal achieved"
+                        : "Training-day goal not achieved"
                     }
                     className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${
                       summary.achieved

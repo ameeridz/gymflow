@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  AlertTriangle,
   BatteryCharging,
   BedDouble,
   BriefcaseBusiness,
@@ -17,6 +18,7 @@ import type { RestDayReason } from "@/types/rest-day";
 
 interface LogRestDayDialogProps {
   open: boolean;
+  blockedDates?: string[];
   onClose: () => void;
   onSave: (input: {
     date: string;
@@ -71,18 +73,20 @@ const restDayOptions: {
 
 function getLocalDateValue() {
   const currentDate = new Date();
-  const timezoneOffset =
-    currentDate.getTimezoneOffset() * 60_000;
+  const year = currentDate.getFullYear();
+  const month = String(
+    currentDate.getMonth() + 1,
+  ).padStart(2, "0");
+  const day = String(
+    currentDate.getDate(),
+  ).padStart(2, "0");
 
-  return new Date(
-    currentDate.getTime() - timezoneOffset,
-  )
-    .toISOString()
-    .split("T")[0];
+  return `${year}-${month}-${day}`;
 }
 
 export function LogRestDayDialog({
   open,
+  blockedDates = [],
   onClose,
   onSave,
 }: LogRestDayDialogProps) {
@@ -90,17 +94,25 @@ export function LogRestDayDialog({
 
   const [selectedDate, setSelectedDate] =
     useState(today);
-
   const [selectedReason, setSelectedReason] =
     useState<RestDayReason>("recovery");
-
   const [note, setNote] = useState("");
 
   if (!open) {
     return null;
   }
 
+  const selectedDateHasWorkout =
+    blockedDates.includes(selectedDate);
+
   function handleSave() {
+    if (
+      !selectedDate ||
+      selectedDateHasWorkout
+    ) {
+      return;
+    }
+
     onSave({
       date: selectedDate,
       reason: selectedReason,
@@ -160,9 +172,44 @@ export function LogRestDayDialog({
             onChange={(event) =>
               setSelectedDate(event.target.value)
             }
-            className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 dark:border-zinc-800 dark:bg-zinc-900"
+            aria-invalid={selectedDateHasWorkout}
+            aria-describedby={
+              selectedDateHasWorkout
+                ? "rest-day-date-conflict"
+                : undefined
+            }
+            className={`mt-2 w-full rounded-2xl border bg-white px-4 py-3 text-sm outline-none transition dark:bg-zinc-900 ${
+              selectedDateHasWorkout
+                ? "border-rose-400 focus:border-rose-500 focus:ring-2 focus:ring-rose-500/15 dark:border-rose-500/50"
+                : "border-zinc-200 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-600/15 dark:border-zinc-800"
+            }`}
           />
         </label>
+
+        {selectedDateHasWorkout ? (
+          <div
+            id="rest-day-date-conflict"
+            role="alert"
+            className="mt-3 flex items-start gap-3 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700 dark:border-rose-500/20 dark:bg-rose-500/10 dark:text-rose-300"
+          >
+            <AlertTriangle
+              size={19}
+              className="mt-0.5 shrink-0"
+            />
+
+            <div>
+              <p className="text-sm font-bold">
+                A workout already exists on this date
+              </p>
+
+              <p className="mt-1 text-xs leading-5 text-rose-600/80 dark:text-rose-300/75">
+                A rest day cannot be recorded on the
+                same calendar day as a completed
+                workout. Choose another date.
+              </p>
+            </div>
+          </div>
+        ) : null}
 
         <section className="mt-6">
           <p className="text-sm font-bold">
@@ -266,7 +313,10 @@ export function LogRestDayDialog({
           <button
             type="button"
             onClick={handleSave}
-            disabled={!selectedDate}
+            disabled={
+              !selectedDate ||
+              selectedDateHasWorkout
+            }
             className="flex items-center justify-center gap-2 rounded-2xl bg-emerald-600 px-4 py-3.5 font-bold text-white shadow-lg shadow-emerald-600/20 transition hover:bg-emerald-700 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Save size={17} />

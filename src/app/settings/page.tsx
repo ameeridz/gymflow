@@ -303,7 +303,8 @@ export default function SettingsPage() {
               <div>
                 <p className="font-bold">Weekly target</p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Choose how many sessions you want to complete each week.
+                Choose how many days you want to train each week.
+                Multiple sessions on one day count as one training day.
                 </p>
               </div>
             </div>
@@ -321,7 +322,7 @@ export default function SettingsPage() {
                       showToast({
                         type: "success",
                         title: "Weekly goal updated",
-                        description: `Your new target is ${target} sessions per week.`,
+                        description: `Your new target is ${target} training days per week.`,
                       });
                     }}
                     className={`rounded-2xl px-4 py-3 font-bold transition ${
@@ -335,6 +336,11 @@ export default function SettingsPage() {
                 );
               })}
             </div>
+            <p className="mt-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
+            Changing your target recalculates current and previous
+            weekly streaks using the new training-day goal.
+            </p>
+            
           </article>
 
           <article className="rounded-3xl border border-zinc-200 bg-white p-5 dark:border-zinc-800 dark:bg-zinc-900 sm:p-6">
@@ -473,8 +479,9 @@ export default function SettingsPage() {
                       Weekly target
                     </dt>
                     <dd className="mt-1 font-bold">
-                      {selectedBackup.settings.weeklyTarget} sessions
+                    {selectedBackup.settings.weeklyTarget} training days
                     </dd>
+
                   </div>
                   <div>
                     <dt className="text-zinc-500 dark:text-zinc-400">Theme</dt>

@@ -1,3 +1,8 @@
+import {
+  getEndOfLocalWeek,
+  getLocalDateKey,
+  getStartOfLocalWeek,
+} from "@/lib/local-date";
 import type { GymSession } from "@/types/session";
 
 export interface WeeklySessionSummary {
@@ -16,42 +21,14 @@ export interface WeeklyStreakResult {
   weeklySummaries: WeeklySessionSummary[];
 }
 
-function getStartOfWeek(date: Date) {
-  const result = new Date(date);
-
-  const day = result.getDay();
-
-  const daysSinceMonday =
-    day === 0 ? 6 : day - 1;
-
-  result.setDate(
-    result.getDate() - daysSinceMonday,
-  );
-
-  result.setHours(0, 0, 0, 0);
-
-  return result;
-}
-
-function getEndOfWeek(weekStart: Date) {
-  const result = new Date(weekStart);
-
-  result.setDate(result.getDate() + 6);
-  result.setHours(23, 59, 59, 999);
-
-  return result;
-}
-
 function addWeeks(
   date: Date,
   numberOfWeeks: number,
 ) {
   const result = new Date(date);
-
   result.setDate(
     result.getDate() + numberOfWeeks * 7,
   );
-
   return result;
 }
 
@@ -61,25 +38,35 @@ function isCompletedSession(
   return session.status === "completed";
 }
 
-function getSessionCountForWeek(
+function getTrainingDayCountForWeek(
   sessions: GymSession[],
   weekStart: Date,
   weekEnd: Date,
 ) {
-  return sessions.filter((session) => {
+  const trainingDateKeys = new Set<string>();
+
+  for (const session of sessions) {
     if (!isCompletedSession(session)) {
-      return false;
+      continue;
     }
 
     const sessionDate = new Date(
       session.startedAt,
     );
 
-    return (
-      sessionDate >= weekStart &&
-      sessionDate <= weekEnd
+    if (
+      sessionDate < weekStart ||
+      sessionDate > weekEnd
+    ) {
+      continue;
+    }
+
+    trainingDateKeys.add(
+      getLocalDateKey(sessionDate),
     );
-  }).length;
+  }
+
+  return trainingDateKeys.size;
 }
 
 function calculateLongestStreak(
@@ -95,7 +82,6 @@ function calculateLongestStreak(
   for (const summary of chronologicalSummaries) {
     if (summary.achieved) {
       runningStreak += 1;
-
       longestStreak = Math.max(
         longestStreak,
         runningStreak,
@@ -118,58 +104,45 @@ export function calculateWeeklyStreak(
     Math.max(2, Math.round(weeklyTarget)),
   );
 
-  const currentDate = new Date();
-
   const currentWeekStart =
-    getStartOfWeek(currentDate);
+    getStartOfLocalWeek();
 
-  const weeklySummaries =
-    Array.from(
-      {
-        length: numberOfWeeks,
-      },
-      (_, index) => {
-        const weekStart = addWeeks(
-          currentWeekStart,
-          -index,
+  const weeklySummaries = Array.from(
+    { length: numberOfWeeks },
+    (_, index) => {
+      const weekStart = addWeeks(
+        currentWeekStart,
+        -index,
+      );
+      const weekEnd =
+        getEndOfLocalWeek(weekStart);
+      const trainingDayCount =
+        getTrainingDayCountForWeek(
+          sessions,
+          weekStart,
+          weekEnd,
         );
 
-        const weekEnd =
-          getEndOfWeek(weekStart);
-
-        const sessionCount =
-          getSessionCountForWeek(
-            sessions,
-            weekStart,
-            weekEnd,
-          );
-
-        return {
-          weekStart:
-            weekStart.toISOString(),
-          weekEnd: weekEnd.toISOString(),
-          sessionCount,
-          target: safeWeeklyTarget,
-          achieved:
-            sessionCount >= safeWeeklyTarget,
-          currentWeek: index === 0,
-        };
-      },
-    );
+      return {
+        weekStart: weekStart.toISOString(),
+        weekEnd: weekEnd.toISOString(),
+        sessionCount: trainingDayCount,
+        target: safeWeeklyTarget,
+        achieved:
+          trainingDayCount >= safeWeeklyTarget,
+        currentWeek: index === 0,
+      };
+    },
+  );
 
   let currentStreak = 0;
-
-  const currentWeek =
-    weeklySummaries[0];
-
-  const completedWeekSummaries =
+  const currentWeek = weeklySummaries[0];
+  const streakEligibleSummaries =
     currentWeek?.achieved
       ? weeklySummaries
       : weeklySummaries.slice(1);
 
-  for (
-    const summary of completedWeekSummaries
-  ) {
+  for (const summary of streakEligibleSummaries) {
     if (!summary.achieved) {
       break;
     }
@@ -182,14 +155,12 @@ export function calculateWeeklyStreak(
       (summary) => summary.achieved,
     ).length;
 
-  const longestStreak =
-    calculateLongestStreak(
-      weeklySummaries,
-    );
-
   return {
     currentStreak,
-    longestStreak,
+    longestStreak:
+      calculateLongestStreak(
+        weeklySummaries,
+      ),
     completedWeeks,
     weeklySummaries,
   };
@@ -202,7 +173,6 @@ export function formatWeekRange(
   const weekStart = new Date(
     weekStartValue,
   );
-
   const weekEnd = new Date(
     weekEndValue,
   );

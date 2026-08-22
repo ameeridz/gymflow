@@ -32,10 +32,7 @@ interface SessionCompletionSummaryProps {
   onViewHistory: () => void;
 }
 
-const activityLabels: Record<
-  ActivityType,
-  string
-> = {
+const activityLabels: Record<ActivityType, string> = {
   strength: "Strength",
   cardio: "Cardio",
   mixed: "Mixed",
@@ -51,10 +48,7 @@ const activityIcons = {
   quick: Timer,
 };
 
-const moodLabels: Record<
-  SessionMood,
-  string
-> = {
+const moodLabels: Record<SessionMood, string> = {
   tough: "Tough",
   okay: "Okay",
   great: "Great",
@@ -81,11 +75,9 @@ function formatDuration(
   const totalMinutes = Math.floor(
     totalSeconds / 60,
   );
-
   const hours = Math.floor(
     totalMinutes / 60,
   );
-
   const minutes = totalMinutes % 60;
 
   if (hours > 0) {
@@ -106,26 +98,21 @@ export function SessionCompletionSummary({
 }: SessionCompletionSummaryProps) {
   const ActivityIcon =
     activityIcons[session.activityType];
-
   const activityLabel =
     activityLabels[session.activityType];
-
   const MoodIcon = session.mood
     ? moodIcons[session.mood]
     : Meh;
-
   const moodLabel = session.mood
     ? moodLabels[session.mood]
     : "Not recorded";
 
-  const remainingSessions = Math.max(
+  const remainingTrainingDays = Math.max(
     0,
     weeklyTarget - completedThisWeek,
   );
-
   const weeklyGoalReached =
     completedThisWeek >= weeklyTarget;
-
   const weeklyProgress = Math.min(
     100,
     (completedThisWeek / weeklyTarget) * 100,
@@ -133,17 +120,17 @@ export function SessionCompletionSummary({
 
   const progressMessage = weeklyGoalReached
     ? completedThisWeek === weeklyTarget
-      ? "Weekly goal achieved. Great work showing up."
+      ? "Weekly training-day goal achieved. Great work showing up."
       : `You have exceeded your weekly goal by ${
           completedThisWeek - weeklyTarget
-        } session${
+        } training day${
           completedThisWeek - weeklyTarget === 1
             ? ""
             : "s"
         }.`
-    : remainingSessions === 1
-      ? "One more session to reach your weekly goal."
-      : `${remainingSessions} more sessions to reach your weekly goal.`;
+    : remainingTrainingDays === 1
+      ? "One more training day to reach your weekly goal."
+      : `${remainingTrainingDays} more training days to reach your weekly goal.`;
 
   return (
     <div
@@ -181,8 +168,9 @@ export function SessionCompletionSummary({
           </h2>
 
           <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-            Another completed session has been added to
-            your consistency journey.
+            This workout has been saved to History.
+            Training days count once per calendar day,
+            even when you complete multiple sessions.
           </p>
         </div>
 
@@ -196,7 +184,6 @@ export function SessionCompletionSummary({
               <p className="text-sm font-semibold uppercase tracking-wider text-violet-100">
                 Completed activity
               </p>
-
               <h3 className="mt-1 text-2xl font-black">
                 {activityLabel}
               </h3>
@@ -207,12 +194,10 @@ export function SessionCompletionSummary({
             <div className="rounded-2xl bg-white/15 p-4">
               <div className="flex items-center gap-2 text-violet-100">
                 <Clock3 size={17} />
-
                 <p className="text-xs font-semibold uppercase tracking-wider">
                   Duration
                 </p>
               </div>
-
               <p className="mt-2 text-xl font-black">
                 {formatDuration(
                   session.durationSeconds,
@@ -223,12 +208,10 @@ export function SessionCompletionSummary({
             <div className="rounded-2xl bg-white/15 p-4">
               <div className="flex items-center gap-2 text-violet-100">
                 <MoodIcon size={17} />
-
                 <p className="text-xs font-semibold uppercase tracking-wider">
                   Mood
                 </p>
               </div>
-
               <p className="mt-2 text-xl font-black">
                 {moodLabel}
               </p>
@@ -240,7 +223,6 @@ export function SessionCompletionSummary({
               <p className="text-xs font-semibold uppercase tracking-wider text-violet-100">
                 Session note
               </p>
-
               <p className="mt-2 text-sm leading-6 text-white">
                 {session.note}
               </p>
@@ -267,12 +249,14 @@ export function SessionCompletionSummary({
 
               <div>
                 <p className="text-sm font-semibold text-zinc-500 dark:text-zinc-400">
-                  Weekly progress
+                  Weekly training-day progress
                 </p>
-
                 <p className="mt-1 text-2xl font-black">
                   {completedThisWeek} /{" "}
                   {weeklyTarget}
+                  <span className="ml-1 text-sm font-bold text-zinc-500 dark:text-zinc-400">
+                    days
+                  </span>
                 </p>
               </div>
             </div>

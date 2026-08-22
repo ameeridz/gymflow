@@ -19,6 +19,7 @@ import {
   getAverageDurationSeconds,
   getCompletedSessionsThisWeek,
   getTotalDurationSeconds,
+  getTrainingDayCountThisWeek,
 } from "@/lib/session-analytics";
 import { calculateWeeklyStreak } from "@/lib/weekly-streak";
 import { useSessionStore } from "@/stores/session-store";
@@ -53,6 +54,11 @@ export default function ProgressPage() {
       completedSessions,
     );
 
+  const trainingDaysThisWeek =
+    getTrainingDayCountThisWeek(
+      completedSessions,
+    );
+
   const totalDuration =
     getTotalDurationSeconds(
       completedSessions,
@@ -71,67 +77,61 @@ export default function ProgressPage() {
 
   const weeklyProgress = Math.min(
     100,
-    (sessionsThisWeek.length / weeklyTarget) *
+    (trainingDaysThisWeek / weeklyTarget) *
       100,
   );
 
   const weeklyGoalReached =
-    sessionsThisWeek.length >= weeklyTarget;
+    trainingDaysThisWeek >= weeklyTarget;
 
-  const remainingSessions = Math.max(
+  const remainingTrainingDays = Math.max(
     0,
-    weeklyTarget - sessionsThisWeek.length,
+    weeklyTarget - trainingDaysThisWeek,
   );
 
   const goalMessage = weeklyGoalReached
-    ? sessionsThisWeek.length === weeklyTarget
+    ? trainingDaysThisWeek === weeklyTarget
       ? "Weekly goal achieved. Keep the momentum going."
       : `Weekly goal exceeded by ${
-          sessionsThisWeek.length -
-          weeklyTarget
-        } session${
-          sessionsThisWeek.length -
-            weeklyTarget ===
-          1
+          trainingDaysThisWeek - weeklyTarget
+        } training day${
+          trainingDaysThisWeek - weeklyTarget === 1
             ? ""
             : "s"
         }.`
-    : `${remainingSessions} more session${
-        remainingSessions === 1 ? "" : "s"
-      } to reach your goal.`;
+    : remainingTrainingDays === 1
+      ? "One more training day to reach your weekly goal."
+      : `${remainingTrainingDays} more training days to reach your weekly goal.`;
 
   const progressItems = [
     {
-      label: "This week",
-      value: `${sessionsThisWeek.length} / ${weeklyTarget}`,
-      description: weeklyGoalReached
-        ? "Weekly goal achieved."
-        : `${remainingSessions} more to reach your goal.`,
-      icon: Target,
+      label: "Sessions this week",
+      value: String(sessionsThisWeek.length),
+      description:
+        "Completed workout sessions since Monday.",
+      icon: Dumbbell,
     },
     {
       label: "Total sessions",
       value: String(completedSessions.length),
       description:
         "Completed sessions across your history.",
-      icon: Dumbbell,
+      icon: Target,
     },
     {
       label: "Total gym time",
-      value:
-        formatAnalyticsDuration(
-          totalDuration,
-        ),
+      value: formatAnalyticsDuration(
+        totalDuration,
+      ),
       description:
         "Time across all completed sessions.",
       icon: Clock3,
     },
     {
       label: "Average session",
-      value:
-        formatAnalyticsDuration(
-          averageDuration,
-        ),
+      value: formatAnalyticsDuration(
+        averageDuration,
+      ),
       description:
         "Average completed-session duration.",
       icon: Gauge,
@@ -188,7 +188,7 @@ export default function ProgressPage() {
 
             <p className="mx-auto mt-3 max-w-md text-sm leading-6 text-zinc-500 dark:text-zinc-400 sm:text-base sm:leading-7">
               Complete your first session to unlock
-              weekly goals, workout analytics and
+              training-day goals, workout analytics and
               consistency streaks.
             </p>
 
@@ -198,9 +198,8 @@ export default function ProgressPage() {
                   size={19}
                   className="text-violet-600 dark:text-violet-400"
                 />
-
                 <p className="mt-3 text-sm font-bold">
-                  Weekly goals
+                  Training-day goals
                 </p>
               </div>
 
@@ -209,7 +208,6 @@ export default function ProgressPage() {
                   size={19}
                   className="text-violet-600 dark:text-violet-400"
                 />
-
                 <p className="mt-3 text-sm font-bold">
                   Workout analytics
                 </p>
@@ -220,7 +218,6 @@ export default function ProgressPage() {
                   size={19}
                   className="text-orange-500"
                 />
-
                 <p className="mt-3 text-sm font-bold">
                   Weekly streaks
                 </p>
@@ -257,11 +254,11 @@ export default function ProgressPage() {
 
                   <div className="min-w-0">
                     <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-100 sm:text-sm sm:tracking-[0.2em]">
-                      Weekly goal
+                      Weekly training-day goal
                     </p>
 
                     <h2 className="mt-1 text-3xl font-black sm:mt-2 sm:text-4xl">
-                      {sessionsThisWeek.length} /{" "}
+                      {trainingDaysThisWeek} /{" "}
                       {weeklyTarget}
                     </h2>
                   </div>
