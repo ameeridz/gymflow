@@ -186,37 +186,46 @@ function HomeContent() {
               {activeSession ? (
                 <ActiveSessionCard />
               ) : (
-                <section className="rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
-                  <div className="flex max-w-xl flex-col">
-                    <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/15">
-                      <Flame size={23} />
-                    </div>
-                    <p className="mt-6 text-sm font-semibold uppercase tracking-[0.2em] text-violet-100">
-                      Today&apos;s commitment
-                    </p>
-                    <h2 className="mt-2 text-3xl font-black">Just begin.</h2>
-                    <p className="mt-3 text-violet-100">
-                      Check in when you arrive, or choose an intentional rest
-                      day when recovery is the better decision.
-                    </p>
-                    <div className="mt-7 grid gap-3 sm:grid-cols-2">
-                      <button
-                        type="button"
-                        onClick={() => setCheckInOpen(true)}
-                        className="rounded-2xl bg-white px-6 py-4 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98]"
-                      >
-                        Check In Now
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setRestDayDialogOpen(true)}
-                        className="rounded-2xl border border-white/25 bg-white/10 px-6 py-4 font-bold text-white transition hover:bg-white/15 active:scale-[0.98]"
-                      >
-                        Log a Rest Day
-                      </button>
-                    </div>
-                  </div>
-                </section>
+                <section className="rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-5 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
+  <div className="flex max-w-xl flex-col">
+    <div className="flex items-center gap-3">
+      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 sm:h-12 sm:w-12">
+        <Flame size={22} />
+      </div>
+
+      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-100 sm:text-sm sm:tracking-[0.2em]">
+        Today&apos;s commitment
+      </p>
+    </div>
+
+    <h2 className="mt-5 text-2xl font-black sm:mt-6">
+      Just begin.
+    </h2>
+
+    <p className="mt-2 max-w-lg text-sm leading-6 text-violet-100 sm:mt-3 sm:text-base sm:leading-7">
+      Check in when you arrive, or choose an intentional
+      rest day when recovery is the better decision.
+    </p>
+
+    <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2">
+      <button
+        type="button"
+        onClick={() => setCheckInOpen(true)}
+        className="rounded-2xl bg-white px-6 py-3.5 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98] sm:py-4"
+      >
+        Check In Now
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setRestDayDialogOpen(true)}
+        className="rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/15 active:scale-[0.98] sm:py-4"
+      >
+        Log a Rest Day
+      </button>
+    </div>
+  </div>
+</section>
               )}
             </div>
           </section>
