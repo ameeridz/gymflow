@@ -57,7 +57,7 @@ export function WeeklyTargetDialog({
         </div>
 
         <p className="mt-6 text-sm font-semibold uppercase tracking-[0.18em] text-violet-600 dark:text-violet-400">
-          Weekly goal
+          Weekly training-day goal
         </p>
 
         <h2
@@ -68,8 +68,9 @@ export function WeeklyTargetDialog({
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-          Choose how many gym sessions you want to
-          complete from Monday to Sunday.
+          Choose how many days you want to train from
+          Monday to Sunday. Multiple sessions on the
+          same day count as one training day.
         </p>
 
         <div className="mt-6 grid grid-cols-3 gap-2">
@@ -85,6 +86,7 @@ export function WeeklyTargetDialog({
                   setSelectedTarget(target)
                 }
                 aria-pressed={selected}
+                aria-label={`${target} training days per week`}
                 className={`rounded-2xl border px-4 py-4 text-lg font-black transition active:scale-[0.98] ${
                   selected
                     ? "border-violet-600 bg-violet-600 text-white shadow-lg shadow-violet-600/20"
@@ -103,7 +105,15 @@ export function WeeklyTargetDialog({
           </p>
 
           <p className="mt-1 font-bold">
-            {selectedTarget} sessions per week
+            {selectedTarget} training days per week
+          </p>
+        </div>
+
+        <div className="mt-4 rounded-2xl border border-violet-200 bg-violet-50 p-4 dark:border-violet-500/20 dark:bg-violet-500/10">
+          <p className="text-xs leading-5 text-violet-700 dark:text-violet-300">
+            Changing this target recalculates weekly
+            progress and streak history using the new
+            training-day goal.
           </p>
         </div>
 

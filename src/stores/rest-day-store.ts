@@ -25,6 +25,14 @@ interface RestDayState {
     restDayId: string,
   ) => void;
 
+  deleteRestDayByDate: (
+    date: string,
+  ) => void;
+
+  getRestDayByDate: (
+    date: string,
+  ) => RestDay | null;
+
   restoreRestDays: (
     restDays: RestDay[],
   ) => void;
@@ -49,10 +57,10 @@ function sortRestDays(
   return [...restDays].sort(
     (firstRestDay, secondRestDay) =>
       new Date(
-        secondRestDay.date,
+        `${secondRestDay.date}T12:00:00`,
       ).getTime() -
       new Date(
-        firstRestDay.date,
+        `${firstRestDay.date}T12:00:00`,
       ).getTime(),
   );
 }
@@ -60,7 +68,7 @@ function sortRestDays(
 export const useRestDayStore =
   create<RestDayState>()(
     persist(
-      (set) => ({
+      (set, get) => ({
         restDays: [],
 
         addRestDay: ({
@@ -103,18 +111,66 @@ export const useRestDayStore =
             restDays:
               state.restDays.filter(
                 (restDay) =>
-                  restDay.id !==
-                  restDayId,
+                  restDay.id !== restDayId,
               ),
           }));
+        },
+
+        deleteRestDayByDate: (
+          date,
+        ) => {
+          set((state) => ({
+            restDays:
+              state.restDays.filter(
+                (restDay) =>
+                  restDay.date !== date,
+              ),
+          }));
+        },
+
+        getRestDayByDate: (
+          date,
+        ) => {
+          return (
+            get().restDays.find(
+              (restDay) =>
+                restDay.date === date,
+            ) ?? null
+          );
         },
 
         restoreRestDays: (
           restDays,
         ) => {
+          const uniqueRestDaysByDate =
+            new Map<string, RestDay>();
+
+          for (const restDay of restDays) {
+            const existingRestDay =
+              uniqueRestDaysByDate.get(
+                restDay.date,
+              );
+
+            if (
+              !existingRestDay ||
+              new Date(
+                restDay.createdAt,
+              ).getTime() >=
+                new Date(
+                  existingRestDay.createdAt,
+                ).getTime()
+            ) {
+              uniqueRestDaysByDate.set(
+                restDay.date,
+                restDay,
+              );
+            }
+          }
+
           set({
-            restDays:
-              sortRestDays(restDays),
+            restDays: sortRestDays([
+              ...uniqueRestDaysByDate.values(),
+            ]),
           });
         },
       }),

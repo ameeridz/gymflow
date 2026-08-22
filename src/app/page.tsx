@@ -9,10 +9,17 @@ import { CheckInDialog } from "@/components/check-in/check-in-dialog";
 import { SessionCompletionSummary } from "@/components/check-in/session-completion-summary";
 import { InstallGymFlowBanner } from "@/components/pwa/install-gymflow-banner";
 import { LogRestDayDialog } from "@/components/rest-day/log-rest-day-dialog";
+import { RestDayWorkoutConflictDialog } from "@/components/rest-day/rest-day-workout-conflict-dialog";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { TodayGreeting } from "@/components/today/today-greeting";
 import { WeeklyTargetDialog } from "@/components/today/weekly-target-dialog";
-import { getCompletedSessionsThisWeek } from "@/lib/session-analytics";
+import { getLocalDateKey } from "@/lib/local-date";
+import {
+  getTrainingDayCountThisWeek,
+  getUniqueTrainingDateKeys,
+  hasCompletedSessionOnDate,
+  hasCompletedSessionToday,
+} from "@/lib/session-analytics";
 import { useRestDayStore } from "@/stores/rest-day-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
@@ -24,7 +31,13 @@ function HomeContent() {
   const searchParams = useSearchParams();
 
   const showToast = useToastStore((state) => state.showToast);
+
+  const restDays = useRestDayStore((state) => state.restDays);
   const addRestDay = useRestDayStore((state) => state.addRestDay);
+  const deleteRestDayByDate = useRestDayStore(
+    (state) => state.deleteRestDayByDate,
+  );
+
   const activeSession = useSessionStore((state) => state.activeSession);
   const completedSessions = useSessionStore(
     (state) => state.completedSessions,
@@ -35,40 +48,86 @@ function HomeContent() {
   const dismissLastCompletedSession = useSessionStore(
     (state) => state.dismissLastCompletedSession,
   );
+
   const weeklyTarget = useSettingsStore((state) => state.weeklyTarget);
   const setWeeklyTarget = useSettingsStore(
     (state) => state.setWeeklyTarget,
   );
 
-  const [checkInOpen, setCheckInOpen] = useState(() => {
-    const requestedCheckIn = searchParams.get("checkin") === "true";
-    return requestedCheckIn && activeSession === null;
-  });
+  const [checkInOpen, setCheckInOpen] = useState(false);
   const [weeklyTargetOpen, setWeeklyTargetOpen] = useState(false);
   const [restDayDialogOpen, setRestDayDialogOpen] = useState(false);
+  const [restDayConflictOpen, setRestDayConflictOpen] = useState(false);
+
+  const todayKey = getLocalDateKey(new Date());
+  const todayRestDay =
+    restDays.find((restDay) => restDay.date === todayKey) ?? null;
+  const workoutDateKeys = getUniqueTrainingDateKeys(completedSessions);
 
   useEffect(() => {
     if (searchParams.get("checkin") !== "true") return;
-    router.replace("/", { scroll: false });
-  }, [router, searchParams]);
 
-  const sessionsThisWeek = getCompletedSessionsThisWeek(completedSessions);
-  const completedThisWeek = sessionsThisWeek.length;
-  const remainingSessions = Math.max(0, weeklyTarget - completedThisWeek);
+    if (activeSession === null) {
+      if (todayRestDay) {
+        setRestDayConflictOpen(true);
+      } else {
+        setCheckInOpen(true);
+      }
+    }
+
+    router.replace("/", { scroll: false });
+  }, [activeSession, router, searchParams, todayRestDay]);
+
+  const trainingDaysThisWeek =
+    getTrainingDayCountThisWeek(completedSessions);
+  const trainedToday = hasCompletedSessionToday(completedSessions);
+  const remainingTrainingDays = Math.max(
+    0,
+    weeklyTarget - trainingDaysThisWeek,
+  );
   const weeklyProgress = Math.min(
     100,
-    (completedThisWeek / weeklyTarget) * 100,
+    (trainingDaysThisWeek / weeklyTarget) * 100,
   );
+
   const weeklyMessage =
-    completedThisWeek >= weeklyTarget
-      ? completedThisWeek === weeklyTarget
+    trainingDaysThisWeek >= weeklyTarget
+      ? trainingDaysThisWeek === weeklyTarget
         ? "Weekly goal achieved. Great work showing up."
-        : `Weekly goal exceeded by ${completedThisWeek - weeklyTarget} session${
-            completedThisWeek - weeklyTarget === 1 ? "" : "s"
+        : `Weekly goal exceeded by ${
+            trainingDaysThisWeek - weeklyTarget
+          } training day${
+            trainingDaysThisWeek - weeklyTarget === 1 ? "" : "s"
           }.`
-      : remainingSessions === 1
-        ? "One more session to achieve your weekly target."
-        : `${remainingSessions} more sessions to achieve your weekly target.`;
+      : remainingTrainingDays === 1
+        ? "One more training day to achieve your weekly target."
+        : `${remainingTrainingDays} more training days to achieve your weekly target.`;
+
+  function handleCheckInRequest() {
+    if (todayRestDay) {
+      setRestDayConflictOpen(true);
+      return;
+    }
+
+    setCheckInOpen(true);
+  }
+
+  function handleKeepRestDay() {
+    setRestDayConflictOpen(false);
+  }
+
+  function handleStartWorkoutInstead() {
+    deleteRestDayByDate(todayKey);
+    setRestDayConflictOpen(false);
+    setCheckInOpen(true);
+
+    showToast({
+      type: "info",
+      title: "Rest day removed",
+      description:
+        "Today’s rest-day record was removed. Choose an activity to start your workout.",
+    });
+  }
 
   function handleViewHistory() {
     dismissLastCompletedSession();
@@ -78,10 +137,11 @@ function HomeContent() {
   function handleSaveWeeklyTarget(target: number) {
     setWeeklyTarget(target);
     setWeeklyTargetOpen(false);
+
     showToast({
       type: "success",
       title: "Weekly goal updated",
-      description: `Your new target is ${target} sessions per week.`,
+      description: `Your new target is ${target} training days per week.`,
     });
   }
 
@@ -90,8 +150,19 @@ function HomeContent() {
     reason: RestDayReason;
     note: string;
   }) {
+    if (hasCompletedSessionOnDate(completedSessions, input.date)) {
+      showToast({
+        type: "error",
+        title: "Rest day not saved",
+        description:
+          "A completed workout already exists on the selected date.",
+      });
+      return;
+    }
+
     addRestDay(input);
     setRestDayDialogOpen(false);
+
     showToast({
       type: "success",
       title: "Rest day recorded",
@@ -137,7 +208,11 @@ function HomeContent() {
               <p className="mt-3 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
                 {activeSession
                   ? "Your session is active. Focus on moving and let GymFlow count the time."
-                  : "You do not need the perfect workout. Start with a small commitment and protect the habit."}
+                  : trainedToday
+                    ? "Today already counts toward your weekly goal. You can still add another session to your History."
+                    : todayRestDay
+                      ? "Today is recorded as an intentional rest day. Recovery is part of consistency."
+                      : "You do not need the perfect workout. Start with a small commitment and protect the habit."}
               </p>
             </div>
 
@@ -145,10 +220,10 @@ function HomeContent() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-zinc-500 dark:text-zinc-400">
-                    This week
+                    Training days this week
                   </p>
                   <p className="mt-1 text-3xl font-black">
-                    {completedThisWeek} / {weeklyTarget}
+                    {trainingDaysThisWeek} / {weeklyTarget}
                   </p>
                 </div>
                 <button
@@ -168,18 +243,18 @@ function HomeContent() {
                 />
               </div>
               <div className="mt-4">
-  <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
-    {weeklyMessage}
-  </p>
-
-  <button
-    type="button"
-    onClick={() => setWeeklyTargetOpen(true)}
-    className="mt-4 flex w-full items-center justify-center rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3.5 text-sm font-bold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 active:scale-[0.98] dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/15"
-  >
-    Configure Weekly Target
-  </button>
-</div>
+                <p className="text-sm leading-6 text-zinc-500 dark:text-zinc-400">
+                  {weeklyMessage}
+                </p>
+                <button
+                  type="button"
+                  onClick={() => setWeeklyTargetOpen(true)}
+                  className="mt-4 flex w-full items-center justify-center gap-2 rounded-2xl border border-violet-200 bg-violet-50 px-5 py-3.5 text-sm font-bold text-violet-700 transition hover:border-violet-300 hover:bg-violet-100 active:scale-[0.98] dark:border-violet-500/20 dark:bg-violet-500/10 dark:text-violet-300 dark:hover:bg-violet-500/15"
+                >
+                  <Target size={18} />
+                  Configure Weekly Target
+                </button>
+              </div>
             </div>
 
             <div className="order-2 lg:order-3 lg:col-span-2">
@@ -187,52 +262,71 @@ function HomeContent() {
                 <ActiveSessionCard />
               ) : (
                 <section className="rounded-[2rem] bg-gradient-to-br from-violet-600 via-violet-600 to-fuchsia-600 p-5 text-white shadow-2xl shadow-violet-600/20 sm:p-8">
-  <div className="flex max-w-xl flex-col">
-    <div className="flex items-center gap-3">
-      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 sm:h-12 sm:w-12">
-        <Flame size={22} />
-      </div>
+                  <div className="flex max-w-xl flex-col">
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-white/15 sm:h-12 sm:w-12">
+                        <Flame size={22} />
+                      </div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-100 sm:text-sm sm:tracking-[0.2em]">
+                        Today&apos;s commitment
+                      </p>
+                    </div>
 
-      <p className="text-xs font-semibold uppercase tracking-[0.18em] text-violet-100 sm:text-sm sm:tracking-[0.2em]">
-        Today&apos;s commitment
-      </p>
-    </div>
+                    <h2 className="mt-5 text-2xl font-black sm:mt-6">
+                      {trainedToday
+                        ? "Keep the momentum."
+                        : todayRestDay
+                          ? "Recovery day recorded."
+                          : "Just begin."}
+                    </h2>
 
-    <h2 className="mt-5 text-2xl font-black sm:mt-6">
-      Just begin.
-    </h2>
+                    <p className="mt-2 max-w-lg text-xs leading-5 text-violet-100 sm:mt-3 sm:text-base sm:leading-7">
+                      {trainedToday
+                        ? "Today already counts toward your weekly goal. Additional sessions will still be saved in History."
+                        : todayRestDay
+                          ? "Today is protected for recovery. You can keep the rest day or replace it by starting a workout."
+                          : "Check in when you arrive, or choose an intentional rest day when recovery is the better decision."}
+                    </p>
 
-    <p className="mt-2 max-w-lg text-sm leading-6 text-violet-100 sm:mt-3 sm:text-base sm:leading-7">
-      Check in when you arrive, or choose an intentional
-      rest day when recovery is the better decision.
-    </p>
+                    <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2">
+                      <button
+                        type="button"
+                        onClick={handleCheckInRequest}
+                        className="rounded-2xl bg-white px-6 py-3.5 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98] sm:py-4"
+                      >
+                        {trainedToday
+                          ? "Add Another Session"
+                          : todayRestDay
+                            ? "Start Workout Instead"
+                            : "Check In Now"}
+                      </button>
 
-    <div className="mt-6 grid gap-3 sm:mt-7 sm:grid-cols-2">
-      <button
-        type="button"
-        onClick={() => setCheckInOpen(true)}
-        className="rounded-2xl bg-white px-6 py-3.5 font-bold text-violet-700 transition hover:bg-violet-50 active:scale-[0.98] sm:py-4"
-      >
-        Check In Now
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setRestDayDialogOpen(true)}
-        className="rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/15 active:scale-[0.98] sm:py-4"
-      >
-        Log a Rest Day
-      </button>
-    </div>
-  </div>
-</section>
+                      {!trainedToday && !todayRestDay ? (
+                        <button
+                          type="button"
+                          onClick={() => setRestDayDialogOpen(true)}
+                          className="rounded-2xl border border-white/25 bg-white/10 px-6 py-3.5 font-bold text-white transition hover:bg-white/15 active:scale-[0.98] sm:py-4"
+                        >
+                          Log a Rest Day
+                        </button>
+                      ) : (
+                        <div className="flex items-center justify-center rounded-2xl border border-white/15 bg-white/[0.07] px-5 py-3.5 text-center text-sm font-semibold text-violet-100 sm:py-4">
+                          {trainedToday
+                            ? "Training day secured"
+                            : "Rest day protected"}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </section>
               )}
             </div>
           </section>
 
           {!activeSession &&
           !lastCompletedSession &&
-          !restDayDialogOpen ? (
+          !restDayDialogOpen &&
+          !restDayConflictOpen ? (
             <InstallGymFlowBanner />
           ) : null}
 
@@ -246,8 +340,16 @@ function HomeContent() {
       <LogRestDayDialog
         key={`${restDayDialogOpen}`}
         open={restDayDialogOpen}
+        blockedDates={workoutDateKeys}
         onClose={() => setRestDayDialogOpen(false)}
         onSave={handleSaveRestDay}
+      />
+
+      <RestDayWorkoutConflictDialog
+        open={restDayConflictOpen}
+        restDay={todayRestDay}
+        onKeepRestDay={handleKeepRestDay}
+        onStartWorkout={handleStartWorkoutInstead}
       />
 
       <WeeklyTargetDialog
@@ -261,7 +363,7 @@ function HomeContent() {
       {lastCompletedSession ? (
         <SessionCompletionSummary
           session={lastCompletedSession}
-          completedThisWeek={completedThisWeek}
+          completedThisWeek={trainingDaysThisWeek}
           weeklyTarget={weeklyTarget}
           onDone={dismissLastCompletedSession}
           onViewHistory={handleViewHistory}

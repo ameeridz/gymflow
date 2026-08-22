@@ -1,36 +1,101 @@
+import {
+  getLocalDateKey,
+  getStartOfLocalWeek,
+  isDateWithinLocalWeek,
+  isSameLocalDate,
+} from "@/lib/local-date";
 import type { GymSession } from "@/types/session";
 
+function isCompletedSession(
+  session: GymSession,
+) {
+  return session.status === "completed";
+}
+
 export function getStartOfCurrentWeek() {
-  const currentDate = new Date();
-  const currentDay = currentDate.getDay();
-
-  const daysSinceMonday =
-    currentDay === 0 ? 6 : currentDay - 1;
-
-  const monday = new Date(currentDate);
-
-  monday.setDate(
-    currentDate.getDate() - daysSinceMonday,
-  );
-
-  monday.setHours(0, 0, 0, 0);
-
-  return monday;
+  return getStartOfLocalWeek();
 }
 
 export function getCompletedSessionsThisWeek(
   sessions: GymSession[],
 ) {
-  const startOfWeek = getStartOfCurrentWeek();
-
   return sessions.filter((session) => {
-    if (session.status !== "completed") {
-      return false;
+    return (
+      isCompletedSession(session) &&
+      isDateWithinLocalWeek(session.startedAt)
+    );
+  });
+}
+
+export function getUniqueTrainingDateKeys(
+  sessions: GymSession[],
+) {
+  const dateKeys = new Set<string>();
+
+  for (const session of sessions) {
+    if (!isCompletedSession(session)) {
+      continue;
     }
 
-    const sessionDate = new Date(session.startedAt);
+    dateKeys.add(
+      getLocalDateKey(session.startedAt),
+    );
+  }
 
-    return sessionDate >= startOfWeek;
+  return [...dateKeys].sort();
+}
+
+export function getTrainingDaysThisWeek(
+  sessions: GymSession[],
+) {
+  return getUniqueTrainingDateKeys(
+    getCompletedSessionsThisWeek(sessions),
+  );
+}
+
+export function getTrainingDayCountThisWeek(
+  sessions: GymSession[],
+) {
+  return getTrainingDaysThisWeek(sessions)
+    .length;
+}
+
+export function getCompletedSessionsToday(
+  sessions: GymSession[],
+) {
+  const currentDate = new Date();
+
+  return sessions.filter((session) => {
+    return (
+      isCompletedSession(session) &&
+      isSameLocalDate(
+        session.startedAt,
+        currentDate,
+      )
+    );
+  });
+}
+
+export function hasCompletedSessionToday(
+  sessions: GymSession[],
+) {
+  return (
+    getCompletedSessionsToday(sessions).length > 0
+  );
+}
+
+export function hasCompletedSessionOnDate(
+  sessions: GymSession[],
+  dateValue: Date | string,
+) {
+  return sessions.some((session) => {
+    return (
+      isCompletedSession(session) &&
+      isSameLocalDate(
+        session.startedAt,
+        dateValue,
+      )
+    );
   });
 }
 
@@ -68,7 +133,9 @@ export function formatAnalyticsDuration(
     totalSeconds / 60,
   );
 
-  const hours = Math.floor(totalMinutes / 60);
+  const hours = Math.floor(
+    totalMinutes / 60,
+  );
   const minutes = totalMinutes % 60;
 
   if (hours > 0) {
