@@ -1,4 +1,8 @@
 import type {
+  RestDay,
+  RestDayReason,
+} from "@/types/rest-day";
+import type {
   ActivityType,
   GymSession,
   SessionMood,
@@ -18,6 +22,15 @@ const supportedSessionMoods: SessionMood[] = [
   "great",
 ];
 
+const supportedRestDayReasons: RestDayReason[] = [
+  "scheduled",
+  "recovery",
+  "poor-sleep",
+  "busy",
+  "unwell",
+  "other",
+];
+
 const supportedThemes = [
   "light",
   "dark",
@@ -28,7 +41,7 @@ type SupportedTheme =
   (typeof supportedThemes)[number];
 
 export interface GymFlowBackup {
-  version: number;
+  version: 2;
   exportedAt: string;
 
   settings: {
@@ -38,6 +51,7 @@ export interface GymFlowBackup {
   };
 
   completedSessions: GymSession[];
+  restDays: RestDay[];
 }
 
 export type BackupValidationResult =
@@ -54,6 +68,16 @@ type SessionValidationResult =
   | {
       valid: true;
       session: GymSession;
+    }
+  | {
+      valid: false;
+      error: string;
+    };
+
+type RestDayValidationResult =
+  | {
+      valid: true;
+      restDay: RestDay;
     }
   | {
       valid: false;
@@ -79,6 +103,21 @@ function isValidDateString(
   );
 }
 
+function isValidLocalDate(
+  value: unknown,
+): value is string {
+  if (
+    typeof value !== "string" ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(value)
+  ) {
+    return false;
+  }
+
+  const parsedDate = new Date(`${value}T12:00:00`);
+
+  return !Number.isNaN(parsedDate.getTime());
+}
+
 function isActivityType(
   value: unknown,
 ): value is ActivityType {
@@ -97,6 +136,17 @@ function isSessionMood(
     typeof value === "string" &&
     supportedSessionMoods.includes(
       value as SessionMood,
+    )
+  );
+}
+
+function isRestDayReason(
+  value: unknown,
+): value is RestDayReason {
+  return (
+    typeof value === "string" &&
+    supportedRestDayReasons.includes(
+      value as RestDayReason,
     )
   );
 }
@@ -188,20 +238,81 @@ function validateCompletedSession(
     };
   }
 
-  const validatedSession: GymSession = {
-    id: value.id,
-    activityType: value.activityType,
-    startedAt: value.startedAt,
-    endedAt: value.endedAt,
-    durationSeconds: value.durationSeconds,
-    mood: value.mood,
-    note: value.note.slice(0, 280),
-    status: "completed",
+  return {
+    valid: true,
+    session: {
+      id: value.id.trim(),
+      activityType: value.activityType,
+      startedAt: value.startedAt,
+      endedAt: value.endedAt,
+      durationSeconds: value.durationSeconds,
+      mood: value.mood,
+      note: value.note.trim().slice(0, 280),
+      status: "completed",
+    },
   };
+}
+
+function validateRestDay(
+  value: unknown,
+  index: number,
+): RestDayValidationResult {
+  const restDayNumber = index + 1;
+
+  if (!isRecord(value)) {
+    return {
+      valid: false,
+      error: `Rest day ${restDayNumber} is not valid.`,
+    };
+  }
+
+  if (
+    typeof value.id !== "string" ||
+    value.id.trim().length === 0
+  ) {
+    return {
+      valid: false,
+      error: `Rest day ${restDayNumber} has an invalid ID.`,
+    };
+  }
+
+  if (!isValidLocalDate(value.date)) {
+    return {
+      valid: false,
+      error: `Rest day ${restDayNumber} has an invalid date.`,
+    };
+  }
+
+  if (!isRestDayReason(value.reason)) {
+    return {
+      valid: false,
+      error: `Rest day ${restDayNumber} has an unsupported reason.`,
+    };
+  }
+
+  if (typeof value.note !== "string") {
+    return {
+      valid: false,
+      error: `Rest day ${restDayNumber} has an invalid note.`,
+    };
+  }
+
+  if (!isValidDateString(value.createdAt)) {
+    return {
+      valid: false,
+      error: `Rest day ${restDayNumber} has an invalid creation date.`,
+    };
+  }
 
   return {
     valid: true,
-    session: validatedSession,
+    restDay: {
+      id: value.id.trim(),
+      date: value.date,
+      reason: value.reason,
+      note: value.note.trim().slice(0, 280),
+      createdAt: value.createdAt,
+    },
   };
 }
 
@@ -216,7 +327,7 @@ export function validateBackup(
     };
   }
 
-  if (value.version !== 1) {
+  if (value.version !== 1 && value.version !== 2) {
     return {
       valid: false,
       error:
@@ -227,36 +338,29 @@ export function validateBackup(
   if (!isValidDateString(value.exportedAt)) {
     return {
       valid: false,
-      error:
-        "The backup export date is invalid.",
+      error: "The backup export date is invalid.",
     };
   }
 
   if (!isRecord(value.settings)) {
     return {
       valid: false,
-      error:
-        "The backup settings are missing.",
+      error: "The backup settings are missing.",
     };
   }
 
   const displayName =
     typeof value.settings.displayName === "string"
-      ? value.settings.displayName
-          .trim()
-          .slice(0, 40)
+      ? value.settings.displayName.trim().slice(0, 40)
       : "";
 
   if (
     typeof value.settings.weeklyTarget !== "number" ||
-    !Number.isFinite(
-      value.settings.weeklyTarget,
-    )
+    !Number.isFinite(value.settings.weeklyTarget)
   ) {
     return {
       valid: false,
-      error:
-        "The weekly target is invalid.",
+      error: "The weekly target is invalid.",
     };
   }
 
@@ -264,17 +368,14 @@ export function validateBackup(
     7,
     Math.max(
       2,
-      Math.round(
-        value.settings.weeklyTarget,
-      ),
+      Math.round(value.settings.weeklyTarget),
     ),
   );
 
   if (!isSupportedTheme(value.settings.theme)) {
     return {
       valid: false,
-      error:
-        "The backup theme is invalid.",
+      error: "The backup theme is invalid.",
     };
   }
 
@@ -308,22 +409,53 @@ export function validateBackup(
     completedSessions.push(result.session);
   }
 
-  const validatedBackup: GymFlowBackup = {
-    version: 1,
-    exportedAt: value.exportedAt,
+  const restDayValues =
+    value.version === 1
+      ? []
+      : value.restDays;
 
-    settings: {
-      displayName,
-      weeklyTarget,
-      theme: value.settings.theme,
-    },
+  if (!Array.isArray(restDayValues)) {
+    return {
+      valid: false,
+      error: "The rest day history is missing.",
+    };
+  }
 
-    completedSessions,
-  };
+  const restDays: RestDay[] = [];
+
+  for (
+    let index = 0;
+    index < restDayValues.length;
+    index += 1
+  ) {
+    const result = validateRestDay(
+      restDayValues[index],
+      index,
+    );
+
+    if (!result.valid) {
+      return {
+        valid: false,
+        error: result.error,
+      };
+    }
+
+    restDays.push(result.restDay);
+  }
 
   return {
     valid: true,
-    data: validatedBackup,
+    data: {
+      version: 2,
+      exportedAt: value.exportedAt,
+      settings: {
+        displayName,
+        weeklyTarget,
+        theme: value.settings.theme,
+      },
+      completedSessions,
+      restDays,
+    },
   };
 }
 
@@ -331,9 +463,7 @@ export function parseBackupFile(
   fileContent: string,
 ): BackupValidationResult {
   try {
-    const parsedData: unknown =
-      JSON.parse(fileContent);
-
+    const parsedData: unknown = JSON.parse(fileContent);
     return validateBackup(parsedData);
   } catch {
     return {

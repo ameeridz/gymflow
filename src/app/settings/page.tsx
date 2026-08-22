@@ -18,6 +18,7 @@ import {
   parseBackupFile,
   type GymFlowBackup,
 } from "@/lib/backup-validation";
+import { useRestDayStore } from "@/stores/rest-day-store";
 import { useSessionStore } from "@/stores/session-store";
 import { useSettingsStore } from "@/stores/settings-store";
 import { useToastStore } from "@/stores/toast-store";
@@ -80,6 +81,13 @@ export default function SettingsPage() {
     (state) => state.restoreCompletedSessions,
   );
 
+  const restDays = useRestDayStore(
+    (state) => state.restDays,
+  );
+  const restoreRestDays = useRestDayStore(
+    (state) => state.restoreRestDays,
+  );
+
   const [nameInput, setNameInput] = useState(displayName);
   const [showResetConfirmation, setShowResetConfirmation] =
     useState(false);
@@ -107,15 +115,21 @@ export default function SettingsPage() {
   }
 
   function handleExportData() {
-    const backup = {
-      version: 1,
+    const backup: GymFlowBackup = {
+      version: 2,
       exportedAt: new Date().toISOString(),
       settings: {
         displayName,
         weeklyTarget,
-        theme: theme ?? "system",
+        theme:
+          theme === "light" ||
+          theme === "dark" ||
+          theme === "system"
+            ? theme
+            : "system",
       },
       completedSessions,
+      restDays,
     };
 
     const fileContent = JSON.stringify(backup, null, 2);
@@ -192,6 +206,7 @@ export default function SettingsPage() {
     if (!selectedBackup) return;
 
     restoreCompletedSessions(selectedBackup.completedSessions);
+    restoreRestDays(selectedBackup.restDays);
     restoreSettings({
       displayName: selectedBackup.settings.displayName,
       weeklyTarget: selectedBackup.settings.weeklyTarget,
@@ -200,6 +215,8 @@ export default function SettingsPage() {
     setNameInput(selectedBackup.settings.displayName);
 
     const sessionCount = selectedBackup.completedSessions.length;
+    const restDayCount = selectedBackup.restDays.length;
+
     clearSelectedBackup();
 
     showToast({
@@ -207,6 +224,8 @@ export default function SettingsPage() {
       title: "Backup restored",
       description: `${sessionCount} completed ${
         sessionCount === 1 ? "session" : "sessions"
+      }, ${restDayCount} rest ${
+        restDayCount === 1 ? "day" : "days"
       } and your preferences were restored successfully.`,
     });
   }
@@ -214,6 +233,7 @@ export default function SettingsPage() {
   function handleResetData() {
     localStorage.removeItem("gymflow-session-storage");
     localStorage.removeItem("gymflow-settings-storage");
+    localStorage.removeItem("gymflow-rest-day-storage");
     setShowResetConfirmation(false);
     window.location.reload();
   }
@@ -360,7 +380,7 @@ export default function SettingsPage() {
               <div>
                 <p className="font-bold">Backup data</p>
                 <p className="mt-1 text-sm text-zinc-500 dark:text-zinc-400">
-                  Export or restore your GymFlow history and preferences.
+                  Export or restore your workouts, rest days and preferences.
                 </p>
               </div>
             </div>
@@ -434,6 +454,14 @@ export default function SettingsPage() {
                   </div>
                   <div>
                     <dt className="text-zinc-500 dark:text-zinc-400">
+                      Rest days
+                    </dt>
+                    <dd className="mt-1 font-bold">
+                      {selectedBackup.restDays.length}
+                    </dd>
+                  </div>
+                  <div>
+                    <dt className="text-zinc-500 dark:text-zinc-400">
                       Display name
                     </dt>
                     <dd className="mt-1 font-bold">
@@ -457,8 +485,8 @@ export default function SettingsPage() {
                 </dl>
 
                 <p className="mt-4 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-                  Importing will replace your current completed sessions and
-                  preferences. Active sessions will not be restored.
+                  Importing will replace your current completed sessions, rest
+                  days and preferences. Active sessions will not be restored.
                 </p>
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
@@ -491,7 +519,8 @@ export default function SettingsPage() {
                   Reset GymFlow
                 </p>
                 <p className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/70">
-                  Permanently delete sessions and reset all preferences.
+                  Permanently delete sessions, rest days and reset all
+                  preferences.
                 </p>
               </div>
             </div>
