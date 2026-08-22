@@ -2,6 +2,7 @@
 
 import {
   Activity,
+  BatteryCharging,
   Dumbbell,
   HeartPulse,
   LayoutGrid,
@@ -13,17 +14,13 @@ import type { ActivityType } from "@/types/session";
 
 export type HistoryActivityFilter =
   | "all"
+  | "rest-day"
   | ActivityType;
 
 interface HistoryActivityFilterProps {
   value: HistoryActivityFilter;
-  onChange: (
-    value: HistoryActivityFilter,
-  ) => void;
-  sessionCounts: Record<
-    HistoryActivityFilter,
-    number
-  >;
+  onChange: (value: HistoryActivityFilter) => void;
+  sessionCounts: Record<HistoryActivityFilter, number>;
 }
 
 const filterOptions: {
@@ -35,6 +32,11 @@ const filterOptions: {
     value: "all",
     label: "All",
     icon: LayoutGrid,
+  },
+  {
+    value: "rest-day",
+    label: "Rest Day",
+    icon: BatteryCharging,
   },
   {
     value: "strength",
@@ -70,21 +72,18 @@ export function HistoryActivityFilter({
 }: HistoryActivityFilterProps) {
   return (
     <div
-      aria-label="Filter sessions by activity"
+      aria-label="Filter history records"
       className="flex gap-2 overflow-x-auto pb-2"
     >
       {filterOptions.map((option) => {
         const Icon = option.icon;
-        const selected =
-          value === option.value;
+        const selected = value === option.value;
 
         return (
           <button
             key={option.value}
             type="button"
-            onClick={() =>
-              onChange(option.value)
-            }
+            onClick={() => onChange(option.value)}
             aria-pressed={selected}
             className={`flex shrink-0 items-center gap-2 rounded-2xl border px-4 py-3 text-sm font-bold transition ${
               selected
@@ -93,9 +92,7 @@ export function HistoryActivityFilter({
             }`}
           >
             <Icon size={17} />
-
             <span>{option.label}</span>
-
             <span
               className={`rounded-full px-2 py-0.5 text-xs ${
                 selected
