@@ -116,7 +116,7 @@ function InstallInstructionsDialog({
     <div
       role="dialog"
       aria-modal="true"
-      aria-labelledby="install-gymflow-title"
+      aria-labelledby="install-gymeer-title"
       className="fixed inset-0 z-[220] flex items-end justify-center bg-zinc-950/70 backdrop-blur-sm sm:items-center sm:p-4"
     >
       <div className="max-h-[92vh] w-full overflow-y-auto rounded-t-[2rem] border border-zinc-200 bg-white px-5 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] pt-5 shadow-2xl dark:border-zinc-800 dark:bg-zinc-950 sm:max-w-md sm:rounded-[2rem] sm:p-6">
@@ -140,10 +140,10 @@ function InstallInstructionsDialog({
         </p>
 
         <h2
-          id="install-gymflow-title"
+          id="install-gymeer-title"
           className="mt-2 text-2xl font-black tracking-tight"
         >
-          Add GymFlow to your Home Screen
+          Add Gymeer to your Home Screen
         </h2>
 
         <p className="mt-2 text-sm leading-6 text-zinc-500 dark:text-zinc-400">
@@ -165,7 +165,7 @@ function InstallInstructionsDialog({
                 />
 
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                  Open GymFlow in Safari and tap the
+                  Open Gymeer in Safari and tap the
                   Share button.
                 </p>
               </div>
@@ -201,7 +201,7 @@ function InstallInstructionsDialog({
                 />
 
                 <p className="text-sm leading-6 text-zinc-600 dark:text-zinc-300">
-                  Tap Add to place GymFlow on your Home
+                  Tap Add to place Gymeer on your Home
                   Screen.
                 </p>
               </div>
@@ -341,52 +341,57 @@ export function InstallGymFlowBanner() {
     <>
       <div className="pointer-events-none fixed inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+7.35rem)] z-[190] sm:inset-x-auto sm:right-6 sm:w-[26rem] lg:bottom-6">
         <aside className="pointer-events-auto relative overflow-hidden rounded-[1.5rem] border border-white/15 bg-zinc-950/90 px-3 py-3 text-white shadow-[0_18px_50px_rgba(24,24,27,0.28)] backdrop-blur-2xl backdrop-saturate-150 dark:border-white/10 dark:bg-zinc-900/90 sm:rounded-[1.75rem] sm:px-5 sm:py-4">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -left-12 -top-12 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl"
-        />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -left-12 -top-12 h-32 w-32 rounded-full bg-violet-500/20 blur-3xl"
+          />
 
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -bottom-16 right-10 h-32 w-32 rounded-full bg-fuchsia-500/15 blur-3xl"
-        />
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute -bottom-16 right-10 h-32 w-32 rounded-full bg-fuchsia-500/15 blur-3xl"
+          />
 
-        <div className="relative flex items-center gap-2.5 sm:gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-600/25 sm:h-12 sm:w-12 sm:rounded-2xl">
-            <Smartphone size={20} />
+          <div className="relative flex items-center gap-2.5 sm:gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-lg shadow-violet-600/25 sm:h-12 sm:w-12 sm:rounded-2xl">
+              <Smartphone size={20} />
+            </div>
+
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-black sm:text-base">
+                Install Gymeer
+              </p>
+
+              <p className="mt-0.5 line-clamp-2 text-[0.7rem] leading-4 text-zinc-300 sm:mt-1 sm:text-sm sm:leading-5">
+                Quick access from your Home Screen with a
+                full-screen app experience.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={handleInstall}
+              className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-violet-600 px-3 text-xs font-bold text-white shadow-lg shadow-violet-600/25 transition hover:bg-violet-500 active:scale-[0.98] sm:h-auto sm:rounded-2xl sm:px-5 sm:py-3 sm:text-sm"
+            >
+              <Download
+                size={15}
+                className="sm:h-[17px] sm:w-[17px]"
+              />
+              Install
+            </button>
+
+            <button
+              type="button"
+              onClick={handleDismiss}
+              aria-label="Dismiss install Gymeer banner"
+              title="Dismiss"
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-white/10 hover:text-white active:scale-95 sm:h-10 sm:w-10 sm:rounded-xl"
+            >
+              <X
+                size={16}
+                className="sm:h-[18px] sm:w-[18px]"
+              />
+            </button>
           </div>
-
-          <div className="min-w-0 flex-1">
-            <p className="text-sm font-black sm:text-base">
-              Install GymFlow
-            </p>
-
-            <p className="mt-0.5 line-clamp-2 text-[0.7rem] leading-4 text-zinc-300 sm:mt-1 sm:text-sm sm:leading-5">
-              Quick access from your Home Screen with a
-              full-screen app experience.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            onClick={handleInstall}
-            className="flex h-9 shrink-0 items-center justify-center gap-1.5 rounded-xl bg-violet-600 px-3 text-xs font-bold text-white shadow-lg shadow-violet-600/25 transition hover:bg-violet-500 active:scale-[0.98] sm:h-auto sm:rounded-2xl sm:px-5 sm:py-3 sm:text-sm"
-          >
-            <Download size={15} className="sm:h-[17px] sm:w-[17px]" />
-            Install
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDismiss}
-            aria-label="Dismiss install GymFlow banner"
-            title="Dismiss"
-            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-zinc-400 transition hover:bg-white/10 hover:text-white active:scale-95 sm:h-10 sm:w-10 sm:rounded-xl"
-          >
-            <X size={16} className="sm:h-[18px] sm:w-[18px]" />
-          </button>
-        </div>
-
         </aside>
       </div>
 

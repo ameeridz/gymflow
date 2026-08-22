@@ -89,7 +89,7 @@ export default function SettingsPage() {
       type: "success",
       title: "Name saved",
       description: cleanName
-        ? `GymFlow will greet you as ${cleanName}.`
+        ? `Gymeer will greet you as ${cleanName}.`
         : "Your personal greeting has been removed.",
     });
   }
@@ -165,7 +165,7 @@ export default function SettingsPage() {
     if (!file.name.toLowerCase().endsWith(".json")) {
       setImportMessage({
         type: "error",
-        text: "Please select a GymFlow JSON backup file.",
+        text: "Please select a Gymeer JSON backup file.",
       });
       event.target.value = "";
       return;
@@ -183,7 +183,7 @@ export default function SettingsPage() {
     } catch {
       setImportMessage({
         type: "error",
-        text: "GymFlow could not read the selected backup file.",
+        text: "Gymeer could not read the selected backup file.",
       });
       event.target.value = "";
     }
@@ -245,7 +245,7 @@ export default function SettingsPage() {
             Settings
           </h1>
           <p className="mt-3 text-zinc-500 dark:text-zinc-400">
-            Adjust GymFlow to match your routine.
+            Adjust Gymeer to match your routine.
           </p>
         </header>
 
@@ -272,7 +272,7 @@ export default function SettingsPage() {
                   if (event.key === "Enter") handleSaveName();
                 }}
                 maxLength={40}
-                placeholder="What should GymFlow call you?"
+                placeholder="What should Gymeer call you?"
                 className="mt-2 w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3 outline-none transition placeholder:text-zinc-400 focus:border-violet-600 focus:ring-2 focus:ring-violet-600/15 dark:border-zinc-800 dark:bg-zinc-950"
               />
             </label>
@@ -479,7 +479,7 @@ export default function SettingsPage() {
                 <RotateCcw size={21} />
               </div>
               <div>
-                <p className="font-bold text-rose-700 dark:text-rose-300">Reset GymFlow</p>
+                <p className="font-bold text-rose-700 dark:text-rose-300">Reset Gymeer</p>
                 <p className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/70">
                   Permanently delete sessions, rest days and reset all preferences.
                 </p>
@@ -489,7 +489,7 @@ export default function SettingsPage() {
               <button type="button" onClick={() => setShowResetConfirmation(true)} className="mt-5 w-full rounded-2xl bg-rose-600 px-5 py-3 font-bold text-white transition hover:bg-rose-700">Reset All Data</button>
             ) : (
               <div className="mt-5 rounded-2xl bg-white/70 p-4 dark:bg-zinc-950/40">
-                <p className="text-sm font-bold text-rose-700 dark:text-rose-300">Delete all GymFlow data?</p>
+                <p className="text-sm font-bold text-rose-700 dark:text-rose-300">Delete all Gymeer data?</p>
                 <p className="mt-1 text-sm text-rose-600/80 dark:text-rose-300/70">
                   {activeSession
                     ? "An active session is currently running. Resetting will permanently discard it together with all workouts, rest days and preferences."

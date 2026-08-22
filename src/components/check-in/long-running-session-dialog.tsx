@@ -108,7 +108,7 @@ export function LongRunningSessionDialog({
         </section>
 
         <div className="mt-5 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-800 dark:border-amber-500/20 dark:bg-amber-500/10 dark:text-amber-300">
-          GymFlow will not finish or discard the session automatically. The
+          Gymeer will not finish or discard the session automatically. The
           training day will continue to follow the date when the session
           started.
         </div>

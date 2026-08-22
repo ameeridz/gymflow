@@ -93,7 +93,7 @@ export function DesktopSidebar() {
 
         <div className="min-w-0">
           <p className="text-lg font-black tracking-tight">
-            GymFlow
+            Gymeer
           </p>
 
           <a
@@ -120,7 +120,6 @@ export function DesktopSidebar() {
       >
         {navigationItems.map((item) => {
           const Icon = item.icon;
-
           const active = isActiveRoute(
             pathname,
             item.href,
@@ -141,7 +140,6 @@ export function DesktopSidebar() {
               )}
             >
               <Icon size={19} />
-
               <span>{item.label}</span>
             </button>
           );
@@ -150,11 +148,12 @@ export function DesktopSidebar() {
 
       <div className="mt-auto rounded-2xl bg-zinc-100 p-4 dark:bg-zinc-900">
         <p className="text-sm font-bold">
-          Small steps count.
+          Every training day counts.
         </p>
 
         <p className="mt-1 text-xs leading-5 text-zinc-500 dark:text-zinc-400">
-          A short session still protects the habit.
+          Show up, recover intentionally and build
+          consistency at your own pace.
         </p>
       </div>
     </aside>
@@ -190,7 +189,6 @@ export function MobileNavigation() {
           <div className="relative grid grid-cols-4 gap-1">
             {navigationItems.map((item) => {
               const Icon = item.icon;
-
               const active = isActiveRoute(
                 pathname,
                 item.href,

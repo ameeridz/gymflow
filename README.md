@@ -1,42 +1,51 @@
-# GymFlow
+# Gymeer
 
-**GymFlow** is a lightweight gym motivation and consistency tracker designed to help users build the habit of showing up.
+**Build consistency one training day at a time.**
 
-Instead of becoming a complicated workout management system, GymFlow focuses on a simple experience:
+Gymeer is a lightweight, mobile-first gym check-in, workout timer, training-day, recovery, and consistency tracker created by **Ridzjuan**.
 
-> Check in, start moving, complete the session, and build consistency.
+Gymeer began as GymFlow and evolved after product testing and user feedback. The key product insight is simple:
 
-🌐 **Live application:** https://gym.ridzu.one  
-👨‍💻 **Created by Ridzjuan:** [https://ridzu.one](https://ridzu.one)
+> Multiple workouts on the same calendar day are multiple sessions, but they count as only one training day toward the weekly goal.
 
----
+Gymeer focuses on helping users show up consistently without becoming a complicated exercise, set, rep, or weight-management system.
 
-## Why GymFlow?
+## Product URL
 
-Going to the gym consistently can be harder than completing the workout itself.
+The primary Gymeer domain is:
 
-GymFlow encourages users to protect the habit by making every completed session count, including short or difficult sessions.
+```text
+https://gymeer.ridzu.one
+```
 
-The application provides:
+The previous GymFlow URL is retained as a legacy address and can redirect to Gymeer:
 
-- A simple gym check-in flow
-- An active-session timer
-- Weekly attendance goals
-- Persistent activity history
-- Real-time progress analytics
-- Positive and non-judgmental feedback
+```text
+https://gym.ridzu.one
+```
 
-GymFlow is designed around the idea that:
+## Why Gymeer?
 
-> Consistency is built by returning, not by being perfect.
+The name combines:
 
----
+```text
+Gym + Ameer = Gymeer
+```
 
-## Features
+The product is designed around a practical view of consistency:
+
+- Every intentional training day matters
+- Multiple sessions on one day should not inflate weekly progress
+- Recovery can be recorded intentionally
+- Short sessions can still count when deliberately saved
+- Accidental completion should be prevented
+- User data should remain local, portable, and protected
+
+## Core Features
 
 ### Gym Check-In
 
-Users can check in and select an activity type:
+Users can start a workout by choosing an activity type:
 
 - Strength
 - Cardio
@@ -44,305 +53,347 @@ Users can check in and select an activity type:
 - Mobility
 - Quick Session
 
-Each check-in creates an active gym session with a unique ID and start timestamp.
+Starting a check-in creates one active workout session and starts a live timer.
 
-### Active-Session Timer
+### Live Workout Timer
 
-After check-in, GymFlow starts a live session timer.
+The active-session experience includes:
 
-The timer is calculated using:
+- Live elapsed time
+- Activity type
+- Finish Session action
+- Cancel Session confirmation
+- Persistence through browser refreshes
+
+### Training-Day Logic
+
+Gymeer separates **sessions** from **training days**.
+
+Example:
 
 ```text
-Current time - Session start time
+Monday
+- Strength session
+- Cardio session
+
+Result
+- 2 completed sessions
+- 1 training day
 ```
 
-The timer remains accurate even when the browser is refreshed because the original start timestamp is stored locally.
+Weekly goals and streaks use unique local calendar dates based on each session's start time.
 
-### Session Completion
+Session metrics still include every completed workout:
 
-Users can complete an active session and record:
-
-- Session mood: Tough, Okay, or Great
-- Optional session note
-- End timestamp
-- Total session duration
-- Completion status
-
-### Persistent History
-
-Completed sessions appear automatically on the History page.
-
-Each history record includes:
-
-- Activity type
-- Session date and time
-- Session duration
-- Mood
-- Optional note
-- Completion status
-
-### Progress Analytics
-
-GymFlow calculates progress from completed sessions instead of displaying static data.
-
-The Progress page includes:
-
-- Sessions completed during the current week
-- Weekly goal progress
-- Total completed sessions
+- Sessions this week
+- Total sessions
 - Total gym time
 - Average session duration
 
-### Weekly Target
+### Multiple Sessions Per Day
 
-Users can set a weekly target of:
-
-```text
-2, 3, 4, or 5 sessions
-```
-
-The selected target is used automatically by the Today and Progress pages.
-
-For example:
+After completing the first workout of the day, the primary action changes from:
 
 ```text
-5 completed sessions
-Weekly target: 5
-
-Result: 5 / 5 — Weekly goal achieved
+Check In Now
 ```
 
-### Appearance Settings
+to:
 
-GymFlow supports:
+```text
+Add Another Session
+```
 
-- Light mode
-- Dark mode
-- System theme
+Additional sessions are stored in History and included in gym-time analytics, but the calendar day counts only once toward the weekly training-day goal.
 
-The selected appearance is retained after the browser is refreshed or reopened.
+### Weekly Training-Day Goal
 
-### Data Backup
+Users can choose a weekly target from 2 to 7 training days.
 
-Users can export their GymFlow data as a JSON backup containing:
+The target can be configured from:
 
-- Application version
-- Export timestamp
-- Weekly target
+- Today
+- Settings
+
+Changing the target recalculates current and previous streak history using the new training-day target.
+
+### Weekly Streaks
+
+Gymeer calculates:
+
+- Current streak
+- Longest streak
+- Goals achieved
+- Recent weekly training-day history
+
+Weeks run from Monday to Sunday.
+
+The current week does not break an existing streak before the user has had the opportunity to complete the weekly goal.
+
+### Intentional Rest Days
+
+Users can record a Rest Day with:
+
+- Rest date
+- Reason
+- Optional note
+
+Supported reasons include:
+
+- Scheduled rest
+- Recovery
+- Poor sleep
+- Busy day
+- Feeling unwell
+- Other
+
+Rest Days:
+
+- Do not count as workouts
+- Do not increase training-day progress
+- Do not increase gym time
+- Do not increase weekly streaks
+- Appear separately in History
+
+### Workout and Rest-Day Conflict Protection
+
+Gymeer prevents a completed workout and a Rest Day from existing on the same calendar date.
+
+If a workout already exists on a selected date:
+
+```text
+Rest Day saving is blocked
+```
+
+If a Rest Day exists today and the user starts a workout:
+
+```text
+Keep Rest Day
+or
+Start Workout Instead
+```
+
+Choosing Start Workout removes today's Rest Day before opening Check-In.
+
+### Short-Session Protection
+
+Sessions shorter than five minutes trigger a warning before saving.
+
+The user can choose:
+
+```text
+Continue Training
+or
+Save Anyway
+```
+
+This protects against accidental completion while still allowing deliberate short workouts.
+
+### Long-Running Session Protection
+
+Sessions active for six hours trigger a long-running warning.
+
+The user can choose:
+
+```text
+Continue Session
+Finish Session
+Discard Session
+```
+
+Gymeer does not automatically finish or discard a workout.
+
+### Session Completion Summary
+
+After a workout is saved, Gymeer displays:
+
+- Completed activity
+- Duration
+- Mood
+- Optional note
+- Weekly training-day progress
+- View History action
+
+### Mood and Notes
+
+Completed workouts can include a mood:
+
+- Tough
+- Okay
+- Great
+
+Users can also save an optional note of up to 280 characters.
+
+### History
+
+History combines completed workouts and Rest Days in date order.
+
+Users can:
+
+- Search workout and Rest-Day records
+- Sort newest or oldest
+- Filter by Rest Day or activity type
+- Edit completed workouts
+- Delete workouts with confirmation
+- Delete Rest Days with confirmation
+
+### Progress Analytics
+
+The Progress page includes:
+
+- Weekly training-day goal
+- Sessions this week
+- Total sessions
+- Total gym time
+- Average session duration
+- Current weekly streak
+- Longest weekly streak
+- Recent consistency history
+
+### Backup and Restore
+
+Gymeer uses backup schema version 2.
+
+A backup contains:
+
+- Display name
+- Weekly training-day target
 - Theme preference
+- Completed workout sessions
+- Rest Days
+
+Users can:
+
+- Export a JSON backup
+- Preview a validated backup before importing
+- Restore sessions, Rest Days, and preferences
+- Import supported version 1 GymFlow backups for backward compatibility
+
+New backup filenames use the Gymeer brand:
+
+```text
+gymeer-backup-YYYY-MM-DD.json
+```
+
+### Active-Session Data Protection
+
+While a workout is active:
+
+- Backup export remains available
+- Backup import is blocked
+- Settings provides a Go to Today action
+- Reset warns that the active session will be permanently discarded
+
+### Reset All Data
+
+Reset requires explicit confirmation and removes:
+
+- Active session
 - Completed sessions
+- Rest Days
+- User preferences
 
-### Protected Data Reset
+Users are encouraged to export a backup first.
 
-GymFlow includes a confirmation step before deleting local session history and preferences.
+### Installable Progressive Web App
 
-### Responsive Design
+Gymeer is an installable Progressive Web App.
 
-GymFlow is designed for:
+The PWA experience includes:
 
-- Mobile phones
-- Tablets
-- Desktop computers
-
-The interface uses:
-
-- Bottom navigation on mobile
-- Persistent sidebar navigation on desktop
-- Responsive cards and dialogs
-- Touch-friendly controls
-- Light and dark responsive layouts
-
-### Progressive Web App
-
-GymFlow is an installable Progressive Web App.
-
-Users can open GymFlow in a browser and add it directly to the home screen without downloading it from the Google Play Store or Apple App Store.
-
-The PWA includes:
-
-- Web app manifest
-- App icons
-- Apple touch icon
+- Install banner
+- Native browser installation where supported
+- iPhone and iPad Add to Home Screen instructions
 - Standalone display mode
-- Mobile theme colors
-- Safe-area viewport support
+- Mobile safe-area support
+- Light and dark themes
 
----
+## Local-First Architecture
 
-## Application Routes
+Gymeer currently uses a local-first, single-user architecture.
 
-```text
-/           Today dashboard and gym check-in
-/history    Completed session history
-/progress   Weekly and overall progress analytics
-/settings   User preferences and local data controls
-```
+The current version does not require:
 
----
+- Registration
+- Login
+- Remote database
+- Cloud account
 
-## Technology Stack
+Workout history and preferences are stored in browser `localStorage`.
 
-GymFlow is built using:
+### Local Data Limitations
 
-- **Next.js**
-- **React**
-- **TypeScript**
-- **Tailwind CSS**
-- **Zustand**
-- **next-themes**
-- **Lucide React**
-- **Vercel**
-- **Cloudflare DNS**
+Because data is stored locally:
 
----
+- Data does not automatically sync between browsers or devices
+- Clearing browser data can remove local history
+- Incognito windows use separate temporary storage
+- Different domains have separate browser storage
 
-## Current Architecture
+Users should export backups regularly.
 
-GymFlow currently follows a local-first, single-user architecture.
+## Legacy Storage Compatibility
 
-```text
-User
-  ↓
-Next.js PWA
-  ↓
-Zustand state management
-  ↓
-Browser localStorage
-```
+Gymeer retains the original internal GymFlow storage keys during the initial rebrand so existing local data remains accessible on the same domain.
 
-Vercel hosts the application files, while the user's session history and preferences remain in the user's browser.
-
----
-
-## How Data Is Stored
-
-GymFlow currently does not require registration or login.
-
-There is no remote database in the current version.
-
-Application data is stored in browser `localStorage` through Zustand persistence.
-
-### Session Storage
-
-Session data is stored using the following key:
+Examples include:
 
 ```text
 gymflow-session-storage
-```
-
-The session store contains:
-
-```text
-activeSession
-completedSessions
-```
-
-An example completed session has the following structure:
-
-```json
-{
-  "id": "session-id",
-  "activityType": "strength",
-  "startedAt": "2026-08-20T04:10:00.000Z",
-  "endedAt": "2026-08-20T04:55:00.000Z",
-  "durationSeconds": 2700,
-  "mood": "great",
-  "note": "Good strength session",
-  "status": "completed"
-}
-```
-
-### Settings Storage
-
-User settings are stored using:
-
-```text
 gymflow-settings-storage
+gymflow-rest-day-storage
+gymflow-install-banner-dismissed-at
 ```
 
-The settings store currently contains:
+These keys are internal implementation details and do not affect the visible Gymeer brand.
 
-```json
-{
-  "weeklyTarget": 5
-}
-```
+A future migration may rename the keys while preserving existing user data.
 
-Theme preferences are managed separately through `next-themes`.
+## Domain Migration Note
 
----
+Browser `localStorage` is isolated by origin.
 
-## Data Flow
-
-GymFlow uses a single source of truth for session data.
+Data stored at:
 
 ```text
-User completes a session
-          ↓
-Zustand session store updates
-          ↓
-Data is persisted to localStorage
-          ↓
-History displays completed sessions
-          ↓
-Analytics calculate progress
-          ↓
-Today and Progress update automatically
-```
-
-The History, Today, and Progress pages do not maintain separate copies of session data.
-
-All pages read from the same persisted Zustand store.
-
----
-
-## Local Storage Limitations
-
-Because GymFlow currently uses browser `localStorage`:
-
-- Data does not automatically sync between devices
-- Data does not automatically sync between browsers
-- Clearing browser data can remove GymFlow history
-- Incognito sessions have separate temporary storage
-- Local development and production domains use separate storage
-
-For example:
-
-```text
-http://localhost:3000
-https://gymflow-six-rho.vercel.app
 https://gym.ridzu.one
 ```
 
-Each address has its own separate browser storage.
-
-Similarly:
+does not automatically appear at:
 
 ```text
-Phone browser data ≠ Laptop browser data
+https://gymeer.ridzu.one
 ```
 
-Users should use https://gym.ridzu.one as the primary address for real session tracking.
+Before the legacy domain is redirected, existing users should:
 
----
+1. Open the previous domain
+2. Export a backup
+3. Open the Gymeer domain
+4. Import the backup
 
-## Privacy
+After migration, the legacy domain can redirect to the new canonical domain.
 
-The current version of GymFlow does not send workout history to a remote database.
+## Technology Stack
 
-Session history and application preferences remain locally in the user's browser unless the user manually exports a backup file.
+Gymeer is built with:
 
----
+- Next.js
+- React
+- TypeScript
+- Tailwind CSS
+- Zustand
+- next-themes
+- Lucide React
+- Progressive Web App capabilities
+- Vercel
 
 ## Getting Started
 
 ### Requirements
 
-Install the following tools:
-
 - Node.js
 - npm
-- Git
 
 ### Clone the Repository
 
@@ -357,7 +408,7 @@ cd gymflow
 npm install
 ```
 
-### Start the Development Server
+### Start Development
 
 ```bash
 npm run dev
@@ -369,145 +420,94 @@ Open:
 http://localhost:3000
 ```
 
-### Test on Another Device
-
-To expose the development server to another device on the same permitted network:
-
-```bash
-npm run dev -- --hostname 0.0.0.0
-```
-
-Use the network URL displayed by Next.js.
-
-Network access may still be restricted by corporate firewalls, Wi-Fi client isolation, or device security policies.
-
----
-
-## Quality Checks
-
-Run ESLint:
+### Quality Checks
 
 ```bash
 npm run lint
-```
-
-Create an optimized production build:
-
-```bash
 npm run build
 ```
 
-Run the production build locally:
+## Development Workflow
 
-```bash
-npm start
-```
-
----
-
-## Deployment
-
-GymFlow is deployed automatically through Vercel.
-
-The deployment workflow is:
+Gymeer is developed using small, reviewable milestones:
 
 ```text
 Feature branch
+→ Implement one focused change
+→ Test mobile and desktop
+→ Run lint
+→ Run production build
 → Commit
 → Push
-→ Pull Request
-→ Merge into main
-→ Vercel automatic deployment
-→ gym.ridzu.one updated
+→ Pull request
+→ Merge
+→ Production smoke test
 ```
 
-### Production
+## Design Principles
+
+Gymeer follows these product principles:
+
+- Mobile-first
+- Simple before complex
+- Consistency over perfection
+- Training days over inflated session counts
+- Recovery without guilt
+- Clear confirmation before destructive actions
+- Local data ownership
+- Progressive enhancement
+- Accessible touch targets
+- Responsive light and dark themes
+
+## SEO and Brand Identity
+
+The canonical Gymeer identity uses:
 
 ```text
-https://gym.ridzu.one
+Name: Gymeer
+Title: Gymeer — Gym Check-In & Training Day Tracker
+Domain: https://gymeer.ridzu.one
+Creator: Ridzjuan
 ```
 
-### Source Code
+The application includes metadata, Open Graph information, a PWA manifest, and WebSite structured data to help search engines understand the product identity.
 
-```text
-https://github.com/ameeridz/gymflow
-```
+## Current Scope
 
----
+Gymeer is an active personal project and functional MVP.
 
-## Project Structure
+The current product deliberately focuses on consistency tracking rather than detailed workout programming.
 
-```text
-src/
-├── app/
-│   ├── history/
-│   ├── progress/
-│   ├── settings/
-│   ├── layout.tsx
-│   ├── manifest.ts
-│   └── page.tsx
-├── components/
-│   ├── check-in/
-│   ├── app-navigation.tsx
-│   ├── app-shell.tsx
-│   ├── theme-provider.tsx
-│   └── theme-toggle.tsx
-├── lib/
-│   └── session-analytics.ts
-├── stores/
-│   ├── session-store.ts
-│   └── settings-store.ts
-└── types/
-    └── session.ts
-```
+Not currently included:
 
----
+- User accounts
+- Cloud synchronization
+- Exercise libraries
+- Sets and repetitions
+- Weight tracking
+- Personal-record tracking
+- Social features
 
-## Future Roadmap
-
-Possible future improvements include:
-
-- JSON backup import
-- User registration and login
-- Cloud database integration
-- Cross-device synchronization
-- Weekly consistency streaks
-- Calendar activity heatmap
-- Personal milestones and badges
-- Motivational reminders
-- Push notifications
-- Optional social challenges
-- Improved accessibility
-- Automated tests
-
-A future cloud-enabled version may use:
-
-```text
-Next.js
-→ Supabase Auth
-→ PostgreSQL
-→ Row Level Security
-```
-
-This would allow users to log in and access the same session history across multiple devices.
-
----
-
-## Development Status
-
-GymFlow is currently an active personal project and functional MVP.
-
-The current release is designed as:
-
-```text
-A local-first, single-user gym motivation and consistency PWA.
-```
-
----
+These features may be considered after the local-first experience remains stable.
 
 ## Creator
 
-GymFlow was designed and developed by **Ridzjuan**.
+Gymeer was designed and developed by **Ridzjuan**.
+
+Portfolio:
+
+```text
+https://ridzu.one
+```
+
+## License
+
+This project is maintained as a personal portfolio and product-development project. Add a formal license before permitting external reuse or distribution.
+
+
+## Creator
+
+Gymeer was designed and developed by **Ridzjuan**.
 
 - Personal website: [https://ridzu.one](https://ridzu.one)
 - GitHub: https://github.com/ameeridz

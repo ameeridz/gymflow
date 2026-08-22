@@ -65,18 +65,36 @@ function HomeContent() {
   const workoutDateKeys = getUniqueTrainingDateKeys(completedSessions);
 
   useEffect(() => {
-    if (searchParams.get("checkin") !== "true") return;
+  if (searchParams.get("checkin") !== "true") {
+    return;
+  }
 
-    if (activeSession === null) {
-      if (todayRestDay) {
-        setRestDayConflictOpen(true);
-      } else {
-        setCheckInOpen(true);
-      }
+  router.replace("/", {
+    scroll: false,
+  });
+
+  if (activeSession !== null) {
+    return;
+  }
+
+  const openCheckInFlow = window.setTimeout(() => {
+    if (todayRestDay) {
+      setRestDayConflictOpen(true);
+      return;
     }
 
-    router.replace("/", { scroll: false });
-  }, [activeSession, router, searchParams, todayRestDay]);
+    setCheckInOpen(true);
+  }, 0);
+
+  return () => {
+    window.clearTimeout(openCheckInFlow);
+  };
+}, [
+  activeSession,
+  router,
+  searchParams,
+  todayRestDay,
+]);
 
   const trainingDaysThisWeek =
     getTrainingDayCountThisWeek(completedSessions);
@@ -181,7 +199,7 @@ function HomeContent() {
                 <Dumbbell size={22} />
               </div>
               <div className="min-w-0">
-                <p className="text-lg font-black tracking-tight">GymFlow</p>
+                <p className="text-lg font-black tracking-tight">Gymeer</p>
                 <a
                   href="https://ridzu.one"
                   target="_blank"
@@ -207,7 +225,7 @@ function HomeContent() {
               </h1>
               <p className="mt-3 max-w-lg text-base leading-7 text-zinc-600 dark:text-zinc-400">
                 {activeSession
-                  ? "Your session is active. Focus on moving and let GymFlow count the time."
+                  ? "Your session is active. Focus on moving and let Gymeer count the time."
                   : trainedToday
                     ? "Today already counts toward your weekly goal. You can still add another session to your History."
                     : todayRestDay
